@@ -36,7 +36,7 @@ export function PostEditor({ post }: PostEditorProps) {
       // 일반 중첩 iframe
       .replace(
         /<iframe[^>]*src="(<iframe[^>]*src=['\"]([^'\"]+)['\"][^>]*>.*?<\/iframe>)"[^>]*><\/iframe>/g,
-        (match, innerIframe, innerSrc) => {
+        (_: string, innerIframe: string, innerSrc: string) => {
           const youtubeIdMatch = innerSrc.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
           if (youtubeIdMatch && youtubeIdMatch[1]) {
             const videoId = youtubeIdMatch[1];
@@ -48,7 +48,7 @@ export function PostEditor({ post }: PostEditorProps) {
       // HTML escape된 중첩 iframe
       .replace(
         /<iframe[^>]*src="&lt;iframe[^>]*src=['\"]([^'\"]+)['\"][^>]*&gt;.*?&lt;\/iframe&gt;"[^>]*><\/iframe>/g,
-        (match, innerSrc) => {
+        (_: string, innerSrc: string) => {
           const youtubeIdMatch = innerSrc.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
           if (youtubeIdMatch && youtubeIdMatch[1]) {
             const videoId = youtubeIdMatch[1];

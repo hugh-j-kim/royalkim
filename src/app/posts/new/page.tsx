@@ -34,15 +34,15 @@ export default function NewPostPage() {
       const processedContent = content
         .replace(/youtube\.com\/shorts\/([^"&?\/\s]+)/g, 'youtube.com/embed/$1')
         .replace(/youtu\.be\/([^"&?\/\s]+)/g, 'youtube.com/embed/$1')
-        .replace(/<video[^>]*>.*?<\/video>/g, (match) => {
-          const srcMatch = match.match(/src="([^"]+)"/);
+        .replace(/<video[^>]*>.*?<\/video>/g, (_: string) => {
+          const srcMatch = _?.match(/src="([^"]+)"/);
           if (srcMatch && srcMatch[1]) {
             const videoId = srcMatch[1].split('/').pop()?.split('?')[0];
             if (videoId) {
               return `<iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="aspect-ratio: 16/9; width: 100%; max-width: 800px; margin: 2rem auto;"></iframe>`;
             }
           }
-          return match;
+          return _ || '';
         });
 
       const response = await fetch("/api/posts", {

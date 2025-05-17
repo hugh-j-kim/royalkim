@@ -48,12 +48,12 @@ export async function GET(
       // HTML 콘텐츠 정리
       const processContent = (content: string) => {
         // iframe 태그 정리
-        let processedContent = content.replace(/<iframe[^>]*src="([^"]*)"[^>]*>.*?<\/iframe>/g, (match: any, src) => {
+        let processedContent = content.replace(/<iframe[^>]*src="([^"]*)"[^>]*>.*?<\/iframe>/g, (_: any, src: string) => {
           const videoId = src.split('/').pop()?.split('?')[0];
           if (videoId) {
             return `<div class="w-full aspect-video my-8"><iframe width="100%" height="100%" src="https://www.youtube.com/embed/${videoId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
           }
-          return match;
+          return src;
         });
 
         // 닫히지 않은 iframe 태그 제거

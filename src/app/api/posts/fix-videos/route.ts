@@ -11,15 +11,15 @@ export async function POST() {
       const processedContent = post.content
         .replace(/youtube\.com\/shorts\/([^"&?\/\s]+)/g, 'youtube.com/embed/$1')
         .replace(/youtu\.be\/([^"&?\/\s]+)/g, 'youtube.com/embed/$1')
-        .replace(/<video[^>]*>.*?<\/video>/g, (match: string) => {
-          const srcMatch = match.match(/src="([^"]+)"/);
+        .replace(/<video[^>]*>.*?<\/video>/g, (_: string) => {
+          const srcMatch = _.match(/src="([^"]+)"/);
           if (srcMatch && srcMatch[1]) {
             const videoId = srcMatch[1].split('/').pop()?.split('?')[0];
             if (videoId) {
               return `<iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="aspect-ratio: 16/9; width: 100%; max-width: 800px; margin: 2rem auto;"></iframe>`;
             }
           }
-          return match;
+          return _;
         });
 
       // 수정된 내용으로 업데이트
