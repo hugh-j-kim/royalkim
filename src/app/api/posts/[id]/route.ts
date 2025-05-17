@@ -4,12 +4,11 @@ import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 
 export async function GET(
-  request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
     // 조회수 증가와 게시물 조회를 하나의 트랜잭션으로 처리
-    const post = await prisma.$transaction(async (tx) => {
+    const post = await prisma.$transaction(async (tx: any) => {
       // 먼저 게시물을 찾습니다
       const post = await tx.post.findUnique({
         where: {
@@ -48,7 +47,7 @@ export async function GET(
       // HTML 콘텐츠 정리
       const processContent = (content: string) => {
         // iframe 태그 정리
-        let processedContent = content.replace(/<iframe[^>]*src="([^"]*)"[^>]*>.*?<\/iframe>/g, (match, src) => {
+        let processedContent = content.replace(/<iframe[^>]*src="([^"]*)"[^>]*>.*?<\/iframe>/g, (match: any, src) => {
           const videoId = src.split('/').pop()?.split('?')[0];
           if (videoId) {
             return `<div class="w-full aspect-video my-8"><iframe width="100%" height="100%" src="https://www.youtube.com/embed/${videoId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
@@ -142,7 +141,7 @@ export async function PUT(
         }
       )
       // 이미지 태그 정리
-      .replace(/<img[^>]*>/g, (match) => {
+      .replace(/<img[^>]*>/g, (match: any) => {
         const srcMatch = match.match(/src="([^"]+)"/);
         if (srcMatch && srcMatch[1]) {
           return `<img src="${srcMatch[1]}" alt="" class="max-w-full h-auto my-8 mx-auto block" />`;
