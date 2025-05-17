@@ -1,6 +1,6 @@
 import React from "react"
 import Link from "next/link"
-import { getServerSession } from "next-auth"
+import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 import { ContentRenderer } from "@/components/ContentRenderer"
@@ -49,7 +49,7 @@ async function getPost(id: string) {
 }
 
 export default async function PostPage({ params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions)
+  const session: any = await getServerSession(authOptions)
   console.log("Session:", session)
   console.log("Session user:", session?.user)
   let post: Post | null = null

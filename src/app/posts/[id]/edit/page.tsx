@@ -1,5 +1,5 @@
 import React from "react"
-import { getServerSession } from "next-auth"
+import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 import { redirect } from "next/navigation"
@@ -29,7 +29,7 @@ export default async function EditPostPage({
 }: {
   params: { id: string }
 }) {
-  const session = await getServerSession(authOptions)
+  const session: any = await getServerSession(authOptions)
   if (!session) {
     redirect("/auth/signin")
   }
