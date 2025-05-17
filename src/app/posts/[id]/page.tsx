@@ -1,7 +1,7 @@
 import React from "react"
 import Link from "next/link"
 import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/lib/auth"
+import { authOptions } from "@/app/api/auth/[...nextauth]/options"
 import prisma from "@/lib/prisma"
 import { ContentRenderer } from "@/components/ContentRenderer"
 
