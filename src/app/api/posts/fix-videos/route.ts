@@ -11,7 +11,7 @@ export async function POST() {
       const processedContent = post.content
         .replace(/youtube\.com\/shorts\/([^"&?\/\s]+)/g, 'youtube.com/embed/$1')
         .replace(/youtu\.be\/([^"&?\/\s]+)/g, 'youtube.com/embed/$1')
-        .replace(/<video[^>]*>.*?<\/video>/g, (match) => {
+        .replace(/<video[^>]*>.*?<\/video>/g, (match: string) => {
           const srcMatch = match.match(/src="([^"]+)"/);
           if (srcMatch && srcMatch[1]) {
             const videoId = srcMatch[1].split('/').pop()?.split('?')[0];
