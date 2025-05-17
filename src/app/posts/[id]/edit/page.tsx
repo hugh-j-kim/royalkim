@@ -5,15 +5,6 @@ import prisma from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import { PostEditor } from "@/components/PostEditor"
 
-interface Post {
-  id: string
-  title: string
-  content: string
-  author: {
-    email: string
-  }
-}
-
 async function getPost(id: string) {
   const post = await prisma.post.findUnique({
     where: { id },

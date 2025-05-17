@@ -30,14 +30,6 @@ export function PostEditor({ post }: PostEditorProps) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   }
 
-  // div+iframe 구조를 iframe만 남기도록 변환
-  function stripYoutubeDiv(content: string) {
-    return content.replace(
-      /<div[^>]*style="[^"]*padding-bottom:56.25%;[^"]*"[^>]*>\s*<iframe([^>]*)><\/iframe>\s*<\/div>/g,
-      '<iframe$1></iframe>'
-    );
-  }
-
   // 중첩 iframe 구조를 정상적인 유튜브 embed로 복구 (HTML escape 포함)
   function fixNestedIframe(content: string) {
     return content

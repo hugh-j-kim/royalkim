@@ -4,7 +4,6 @@ import React from "react"
 import { useSession, signOut } from "next-auth/react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { ContentRenderer } from "@/components/ContentRenderer"
 
 interface Post {
   id: string
@@ -64,13 +63,6 @@ function getFirstMedia(content: string) {
       </svg>
     </div>
   );
-}
-
-// 카드 하단 요약 텍스트 추출 함수
-function getSummaryText(content: string) {
-  // HTML 태그 제거 후 앞부분만 자르기
-  const text = content.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").trim();
-  return text.length > 80 ? text.slice(0, 80) + "..." : text;
 }
 
 export default function Home() {
