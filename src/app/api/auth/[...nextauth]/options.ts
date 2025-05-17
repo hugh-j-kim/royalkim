@@ -6,7 +6,7 @@ import { compare } from "bcryptjs"
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
   session: {
-    strategy: "jwt",
+    strategy: "jwt" as const,
   },
   pages: {
     signIn: "/login",
@@ -80,4 +80,4 @@ export const authOptions = {
       }
     },
   },
-} as const 
+} 
