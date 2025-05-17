@@ -36,7 +36,7 @@ export function PostEditor({ post }: PostEditorProps) {
       // 일반 중첩 iframe
       .replace(
         /<iframe[^>]*src="(<iframe[^>]*src=['\"]([^'\"]+)['\"][^>]*>.*?<\/iframe>)"[^>]*><\/iframe>/g,
-        (_: string, innerIframe: string, innerSrc: string) => {
+        (_: string, __: string, innerSrc: string) => {
           const youtubeIdMatch = innerSrc.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
           if (youtubeIdMatch && youtubeIdMatch[1]) {
             const videoId = youtubeIdMatch[1];
