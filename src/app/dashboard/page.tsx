@@ -38,7 +38,7 @@ export default function Dashboard() {
               </Button>
             </Link>
             <Link href="/">
-              <Button variant="outline">홈으로</Button>
+              <Button>홈으로</Button>
             </Link>
           </div>
         </div>
