@@ -137,7 +137,7 @@ export async function PUT(
       // YouTube URL을 iframe으로 변환
       .replace(
         /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:shorts\/|embed\/|watch\?v=)|youtu\.be\/)([^"&?\/\s]+)/g,
-        (match: string, videoId: string) => {
+        (_: string, videoId: string) => {
           return `<iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
         }
       )
