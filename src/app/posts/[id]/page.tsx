@@ -97,18 +97,18 @@ export default async function PostPage({ params }: { params: { id: string } }) {
               조회수: {post.viewCount}
             </span>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 w-full max-w-xs mx-auto mt-4 mb-6 justify-center items-center text-center">
+          <div className="flex flex-row justify-center items-center gap-2 w-full max-w-xs mx-auto mt-4 mb-6">
             {session?.user?.email && post.author.email && session.user.email === post.author.email && (
               <Link
                 href={`/posts/${post.id}/edit`}
-                className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
+                className="w-auto px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
               >
                 수정하기
               </Link>
             )}
             <Link
               href="/"
-              className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
+              className="w-auto px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
             >
               목록으로
             </Link>
