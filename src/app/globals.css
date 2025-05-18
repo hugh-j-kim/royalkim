@@ -137,3 +137,23 @@
   margin-left: 0;
   margin-right: 0;
 }
+
+/* 상세화면 본문 내 유튜브/iframe 반응형 + 둥근 모서리 */
+.prose iframe {
+  aspect-ratio: 16/9;
+  width: 100% !important;
+  height: auto !important;
+  border-radius: 12px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  background: #000;
+}
+
+@media (max-width: 640px) {
+  .prose iframe {
+    max-width: 360px !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+}
