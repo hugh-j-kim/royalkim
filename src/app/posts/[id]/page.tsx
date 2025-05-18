@@ -85,39 +85,35 @@ export default async function PostPage({ params }: { params: { id: string } }) {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto w-full px-2 sm:px-4 lg:px-8 py-4 sm:py-8">
         <div className="bg-white rounded-lg shadow-sm p-2 sm:p-4 md:p-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-8">
-            <div className="w-full">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-4 break-words">{post.title}</h1>
-              <div className="flex flex-col sm:flex-row sm:items-center text-xs sm:text-sm text-gray-500 gap-1 sm:gap-4">
-                <span>작성자: {post.author.name}</span>
-                <span>{post.createdAt.toLocaleDateString()}</span>
-                <span className="flex items-center gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                  조회수: {post.viewCount}
-                </span>
-              </div>
-            </div>
-            <div className="flex flex-col sm:flex-row justify-end gap-2 w-full sm:w-auto mt-4 sm:mt-0">
-              {session?.user?.email && post.author.email && session.user.email === post.author.email && (
-                <Link
-                  href={`/posts/${post.id}/edit`}
-                  className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
-                >
-                  수정하기
-                </Link>
-              )}
-              <Link
-                href="/"
-                className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
-              >
-                목록으로
-              </Link>
-            </div>
+          <h1 className="text-lg sm:text-2xl font-bold text-gray-900 mb-2 break-words">{post.title}</h1>
+          <div className="flex flex-col gap-1 text-xs text-gray-500 mb-2 border-b pb-2">
+            <span>작성자: {post.author.name}</span>
+            <span>{post.createdAt.toLocaleDateString()}</span>
+            <span className="flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              조회수: {post.viewCount}
+            </span>
           </div>
-          <div className="prose prose-pink max-w-none">
+          <div className="flex flex-col sm:flex-row gap-2 w-full mt-2 mb-4">
+            {session?.user?.email && post.author.email && session.user.email === post.author.email && (
+              <Link
+                href={`/posts/${post.id}/edit`}
+                className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
+              >
+                수정하기
+              </Link>
+            )}
+            <Link
+              href="/"
+              className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
+            >
+              목록으로
+            </Link>
+          </div>
+          <div className="prose prose-pink max-w-none mt-4">
             <ContentRenderer content={post.content} />
           </div>
         </div>
