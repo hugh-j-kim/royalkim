@@ -82,11 +82,11 @@ export default async function PostPage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-2xl mx-auto w-full px-2 sm:px-4 lg:px-8 py-4 sm:py-8">
-        <div className="bg-white rounded-lg shadow-sm p-2 sm:p-4 md:p-6">
+    <div className="min-h-screen flex flex-col bg-gray-50 w-full">
+      <div className="mx-auto w-full max-w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl">
+        <div className="bg-white rounded-lg shadow-sm p-2 sm:p-4 md:p-6 w-full">
           <h1 className="text-lg sm:text-2xl font-bold text-gray-900 mb-2 break-words">{post.title}</h1>
-          <div className="flex flex-col gap-1 text-xs text-gray-500 mb-2 border-b pb-2">
+          <div className="flex flex-col gap-1 text-xs sm:text-sm text-gray-500 mb-2 border-b pb-2">
             <span>작성자: {post.author.name}</span>
             <span>{post.createdAt.toLocaleDateString()}</span>
             <span className="flex items-center gap-1">
@@ -97,7 +97,7 @@ export default async function PostPage({ params }: { params: { id: string } }) {
               조회수: {post.viewCount}
             </span>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 w-full mt-2 mb-4">
+          <div className="flex flex-col sm:flex-row gap-2 w-full max-w-xs mx-auto mt-4 mb-6 justify-center items-center text-center">
             {session?.user?.email && post.author.email && session.user.email === post.author.email && (
               <Link
                 href={`/posts/${post.id}/edit`}
