@@ -83,12 +83,12 @@ export default async function PostPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
-        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 md:p-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
+      <div className="max-w-2xl mx-auto w-full px-2 sm:px-4 lg:px-8 py-4 sm:py-8">
+        <div className="bg-white rounded-lg shadow-sm p-2 sm:p-4 md:p-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-8">
             <div className="w-full">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 sm:mb-4 break-words">{post.title}</h1>
-              <div className="flex flex-col sm:flex-row sm:items-center text-sm text-gray-500 gap-2 sm:gap-4">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-4 break-words">{post.title}</h1>
+              <div className="flex flex-col sm:flex-row sm:items-center text-xs sm:text-sm text-gray-500 gap-1 sm:gap-4">
                 <span>작성자: {post.author.name}</span>
                 <span>{post.createdAt.toLocaleDateString()}</span>
                 <span className="flex items-center gap-1">
@@ -100,18 +100,18 @@ export default async function PostPage({ params }: { params: { id: string } }) {
                 </span>
               </div>
             </div>
-            <div className="flex justify-end gap-4 w-full mt-4">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 w-full sm:w-auto mt-4 sm:mt-0">
               {session?.user?.email && post.author.email && session.user.email === post.author.email && (
                 <Link
                   href={`/posts/${post.id}/edit`}
-                  className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
+                  className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
                 >
                   수정하기
                 </Link>
               )}
               <Link
                 href="/"
-                className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
+                className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
               >
                 목록으로
               </Link>
