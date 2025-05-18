@@ -103,10 +103,10 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-12">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">글 목록</h1>
-          <div className="flex gap-2">
+      <div className="max-w-4xl mx-auto w-full px-2 sm:px-4 lg:px-8 py-4 sm:py-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">글 목록</h1>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             {session ? (
               <>
                 <Link
@@ -147,21 +147,21 @@ export default function Home() {
             <p className="text-gray-600">아직 작성된 글이 없습니다.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 lg:gap-8">
             {posts.map((post) => (
               <Link
                 key={post.id}
                 href={`/posts/${post.id}`}
-                className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
+                className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 h-full"
               >
                 <div className="flex flex-col h-full">
-                  <div className="relative w-full h-48 mb-1 overflow-hidden rounded-lg">
+                  <div className="relative w-full aspect-video mb-1 overflow-hidden rounded-lg">
                     {getFirstMedia(post.content)}
                   </div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-0 mt-0 line-clamp-2 px-3">
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-0 mt-0 line-clamp-2 px-3">
                     {post.title}
                   </h2>
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between text-sm text-gray-500 gap-1 sm:gap-2 px-3 pb-2 pt-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs sm:text-sm text-gray-500 gap-1 sm:gap-2 px-3 pb-2 pt-0">
                     <span>{post.author.name}</span>
                     <div className="flex items-center gap-2">
                       <span>{new Date(post.createdAt).toLocaleDateString()}</span>
