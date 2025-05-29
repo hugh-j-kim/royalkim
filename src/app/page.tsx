@@ -16,6 +16,13 @@ interface Post {
   viewCount: number
 }
 
+interface PostsResponse {
+  posts: Post[]
+  total: number
+  page: number
+  totalPages: number
+}
+
 // 카드 상단 미디어 추출 함수
 function getFirstMedia(content: string) {
   // 1. 유튜브 iframe 추출
@@ -70,36 +77,56 @@ export default function Home() {
   const [posts, setPosts] = useState<Post[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const [hasPrevious, setHasPrevious] = useState(false)
+
+  const fetchPosts = async (pageNum: number) => {
+    try {
+      const response = await fetch(`/api/posts?page=${pageNum}&limit=10`)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to fetch posts")
+      }
+      
+      const data: PostsResponse = await response.json()
+      
+      if (pageNum === 1) {
+        setPosts(data.posts)
+      } else {
+        // 30개 초과 시 맨 위 10개 제거
+        if (posts.length + data.posts.length > 30) {
+          setPosts(prev => [...prev.slice(10), ...data.posts])
+          setHasPrevious(true)
+        } else {
+          setPosts(prev => [...prev, ...data.posts])
+        }
+      }
+      
+      setHasMore(data.page < data.totalPages)
+      setPage(data.page)
+    } catch (error) {
+      console.error("Error fetching posts:", error)
+      setError(error instanceof Error ? error.message : "Failed to fetch posts")
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        console.log("Fetching posts...")
-        const response = await fetch("/api/posts")
-        console.log("Response status:", response.status)
-        
-        if (!response.ok) {
-          const errorData = await response.json()
-          throw new Error(errorData.error || "Failed to fetch posts")
-        }
-        
-        const data = await response.json()
-        console.log("Fetched posts:", data)
-        // 생성일 기준으로 정렬
-        const sortedData = data.sort((a: Post, b: Post) => 
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        )
-        setPosts(sortedData)
-      } catch (error) {
-        console.error("Error fetching posts:", error)
-        setError(error instanceof Error ? error.message : "Failed to fetch posts")
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchPosts()
+    fetchPosts(1)
   }, [])
+
+  const handleLoadMore = () => {
+    fetchPosts(page + 1)
+  }
+
+  const handleLoadPrevious = () => {
+    if (page > 1) {
+      fetchPosts(page - 1)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -147,37 +174,59 @@ export default function Home() {
             <p className="text-gray-600">아직 작성된 글이 없습니다.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 lg:gap-8">
-            {posts.map((post) => (
-              <Link
-                key={post.id}
-                href={`/posts/${post.id}`}
-                className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 h-full"
-              >
-                <div className="flex flex-col h-full">
-                  <div className="relative w-full aspect-video mb-1 overflow-hidden rounded-lg">
-                    {getFirstMedia(post.content)}
-                  </div>
-                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-0 mt-0 line-clamp-2 px-3">
-                    {post.title}
-                  </h2>
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs sm:text-sm text-gray-500 gap-1 sm:gap-2 px-3 pb-2 pt-0">
-                    <span>{post.author.name}</span>
-                    <div className="flex items-center gap-2">
-                      <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-                      <span className="flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                        {post.viewCount}
-                      </span>
+          <>
+            {hasPrevious && (
+              <div className="flex justify-center mb-4">
+                <button
+                  onClick={handleLoadPrevious}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
+                >
+                  이전 글 보기
+                </button>
+              </div>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 lg:gap-8">
+              {posts.map((post) => (
+                <Link
+                  key={post.id}
+                  href={`/posts/${post.id}`}
+                  className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 h-full"
+                >
+                  <div className="flex flex-col h-full">
+                    <div className="relative w-full aspect-video mb-1 overflow-hidden rounded-lg">
+                      {getFirstMedia(post.content)}
+                    </div>
+                    <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-0 mt-0 line-clamp-2 px-3">
+                      {post.title}
+                    </h2>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs sm:text-sm text-gray-500 gap-1 sm:gap-2 px-3 pb-2 pt-0">
+                      <span>{post.author.name}</span>
+                      <div className="flex items-center gap-2">
+                        <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                        <span className="flex items-center gap-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          {post.viewCount}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+                </Link>
+              ))}
+            </div>
+            {hasMore && (
+              <div className="flex justify-center mt-8">
+                <button
+                  onClick={handleLoadMore}
+                  className="px-4 py-2 text-sm font-medium text-white bg-pink-600 border border-transparent rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
+                >
+                  더보기
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
