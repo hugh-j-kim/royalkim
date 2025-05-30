@@ -9,9 +9,11 @@ interface Post {
   id: string
   title: string
   content: string
+  published: boolean
   createdAt: string
+  authorId: string
   author: {
-    name: string
+    name: string | null
   }
   viewCount: number
 }
@@ -83,11 +85,10 @@ export default function Home() {
 
   const fetchPosts = async (pageNum: number) => {
     try {
-      const response = await fetch(`/api/posts?page=${pageNum}&limit=10`)
+      const response = await fetch("/api/posts")
       
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to fetch posts")
+        throw new Error("Failed to fetch posts")
       }
       
       const data: PostsResponse = await response.json()
@@ -115,8 +116,28 @@ export default function Home() {
   }
 
   useEffect(() => {
-    fetchPosts(1)
-  }, [])
+    const fetchData = async () => {
+      try {
+        const postsResponse = await fetch("/api/posts")
+
+        if (!postsResponse.ok) {
+          throw new Error("Failed to fetch data")
+        }
+
+        const postsData = await postsResponse.json()
+
+        setPosts(postsData.posts)
+      } catch (error) {
+        console.error("Error fetching data:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    if (session?.user) {
+      fetchData()
+    }
+  }, [session])
 
   const handleLoadMore = () => {
     fetchPosts(page + 1)
@@ -128,12 +149,45 @@ export default function Home() {
     }
   }
 
+  if (!session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-pink-500 mb-4">Welcome to Royal Kim</h1>
+          <p className="text-gray-600 mb-8">로그인하여 서비스를 이용해보세요.</p>
+          <Link
+            href="/auth/signin"
+            className="px-6 py-3 bg-pink-500 text-white rounded-md hover:bg-pink-600 transition-colors"
+          >
+            로그인
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-2xl text-pink-500">Loading...</div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto w-full px-2 sm:px-4 lg:px-8 py-4 sm:py-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 sm:mb-8">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">글 목록</h1>
+          <div />
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            {(session?.user as any)?.role === "ADMIN" && (
+              <Link
+                href="/admin"
+                className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                관리페이지
+              </Link>
+            )}
             {session ? (
               <>
                 <Link
@@ -163,11 +217,6 @@ export default function Home() {
         {error ? (
           <div className="text-center py-12">
             <p className="text-red-600">오류가 발생했습니다: {error}</p>
-          </div>
-        ) : isLoading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto"></div>
-            <p className="mt-4 text-gray-600">글을 불러오는 중...</p>
           </div>
         ) : posts.length === 0 ? (
           <div className="text-center py-12">

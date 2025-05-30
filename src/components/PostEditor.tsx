@@ -11,6 +11,7 @@ interface Post {
   createdAt?: string | Date
   updatedAt?: string | Date
   viewCount?: number
+  description?: string | null
 }
 
 interface PostEditorProps {
@@ -20,6 +21,7 @@ interface PostEditorProps {
 export function PostEditor({ post }: PostEditorProps) {
   const router = useRouter()
   const [title, setTitle] = useState(post.title)
+  const [description, setDescription] = useState(post.description || "")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const editorRef = useRef<any>(null)
 
@@ -30,40 +32,26 @@ export function PostEditor({ post }: PostEditorProps) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   }
 
-  // 중첩 iframe 구조를 정상적인 유튜브 embed로 복구 (HTML escape 포함)
-  function fixNestedIframe(content: string) {
-    return content
-      // 일반 중첩 iframe
-      .replace(
-        /<iframe[^>]*src="(<iframe[^>]*src=['\"]([^'\"]+)['\"][^>]*>.*?<\/iframe>)"[^>]*><\/iframe>/g,
-        (_: string, __: string, innerSrc: string) => {
-          const youtubeIdMatch = innerSrc.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
-          if (youtubeIdMatch && youtubeIdMatch[1]) {
-            const videoId = youtubeIdMatch[1];
-            return `<iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen style="max-width:100%;border-radius:8px;"></iframe>`;
-          }
-          return `<a href="${innerSrc}" target="_blank" rel="noopener noreferrer">${innerSrc}</a>`;
-        }
-      )
-      // HTML escape된 중첩 iframe
-      .replace(
-        /<iframe[^>]*src="&lt;iframe[^>]*src=['\"]([^'\"]+)['\"][^>]*&gt;.*?&lt;\/iframe&gt;"[^>]*><\/iframe>/g,
-        (_: string, innerSrc: string) => {
-          const youtubeIdMatch = innerSrc.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
-          if (youtubeIdMatch && youtubeIdMatch[1]) {
-            const videoId = youtubeIdMatch[1];
-            return `<iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen style="max-width:100%;border-radius:8px;"></iframe>`;
-          }
-          return `<a href="${innerSrc}" target="_blank" rel="noopener noreferrer">${innerSrc}</a>`;
-        }
-      );
+  // div+iframe 구조를 iframe만 남기도록 변환
+  function stripYoutubeDiv(content: string) {
+    return content.replace(
+      /<div[^>]*style="[^"]*padding-bottom:56.25%;[^"]*"[^>]*>\s*<iframe([^>]*)><\/iframe>\s*<\/div>/g,
+      '<iframe$1></iframe>'
+    );
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     try {
-      const content = editorRef.current?.getContent() || ""
+      let content = editorRef.current?.getContent() || ""
+      // 이미 iframe이 있으면 변환하지 않고, 유튜브 URL만 변환
+      if (!/<iframe[\s\S]*?>[\s\S]*?<\/iframe>/.test(content)) {
+        content = content
+          .replace(/https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|embed\/|shorts\/)?([\w-]{11})[\S]*/g, (_: string, _www: string, _domain: string, _path: string, videoId: string) => {
+            return `<iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" allowfullscreen style="aspect-ratio: 16/9; width: 100%; max-width: 800px; margin: 2rem auto;"></iframe>`;
+          })
+      }
       const response = await fetch(`/api/posts/${post.id}`, {
         method: "PUT",
         headers: {
@@ -71,7 +59,8 @@ export function PostEditor({ post }: PostEditorProps) {
         },
         body: JSON.stringify({
           title,
-          content,
+          description,
+          content: stripYoutubeDiv(content),
         }),
       })
       if (!response.ok) {
@@ -108,6 +97,21 @@ export function PostEditor({ post }: PostEditorProps) {
             required
           />
         </div>
+        <div>
+          <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+            요약 (검색엔진/공유용)
+          </label>
+          <input
+            id="description"
+            name="description"
+            type="text"
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 mt-1 mb-2"
+            placeholder="이 글을 한두 문장으로 요약해 주세요 (검색엔진, SNS 공유에 사용됩니다)"
+            maxLength={150}
+          />
+        </div>
         <div className="w-full">
           <label htmlFor="content" className="block text-sm font-medium text-gray-700">
             내용
@@ -116,10 +120,11 @@ export function PostEditor({ post }: PostEditorProps) {
             <Editor
               apiKey={process.env.NEXT_PUBLIC_ROYALKIM_TINYMCE_APIKEY}
               onInit={(_evt: any, editor: any) => (editorRef.current = editor)}
-              initialValue={fixNestedIframe(post.content)}
+              value={stripYoutubeDiv(post.content)}
+              onEditorChange={(content) => editorRef.current = content}
               init={{
                 height: "60vh",
-                menubar: false,
+                menubar: true,
                 language: "ko",
                 plugins: [
                   "advlist", "autolink", "lists", "link", "image", "media", "charmap", "preview", "anchor",

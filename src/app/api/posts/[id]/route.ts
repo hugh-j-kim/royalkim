@@ -123,11 +123,11 @@ export async function PUT(
       )
     }
 
-    const { title, content } = await request.json()
+    const { title, description, content } = await request.json()
 
-    if (!title || !content) {
+    if (!title || !description || !content) {
       return NextResponse.json(
-        { error: "Title and content are required" },
+        { error: "Title, description, and content are required" },
         { status: 400 }
       )
     }
@@ -156,6 +156,7 @@ export async function PUT(
       },
       data: {
         title,
+        description,
         content: processedContent,
       },
       include: {
@@ -173,6 +174,47 @@ export async function PUT(
     console.error("Error updating post:", error)
     return NextResponse.json(
       { error: "Failed to update post" },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session: any = await getServerSession(authOptions)
+    if (!session?.user?.email) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+    const post = await prisma.post.findUnique({
+      where: { id: params.id },
+      include: { author: true },
+    })
+    if (!post) {
+      return NextResponse.json(
+        { error: "Post not found" },
+        { status: 404 }
+      )
+    }
+    if (post.author.email !== session.user.email) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+    await prisma.post.delete({
+      where: { id: params.id },
+    })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("Error deleting post:", error)
+    return NextResponse.json(
+      { error: "Failed to delete post" },
       { status: 500 }
     )
   }

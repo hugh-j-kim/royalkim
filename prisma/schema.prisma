@@ -13,12 +13,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String?
-  access_token      String?
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String?
+  id_token          String? @db.Text
   session_state     String?
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -37,12 +37,17 @@ model User {
   id            String    @id @default(cuid())
   name          String?
   email         String?   @unique
-  password      String?
   emailVerified DateTime?
   image         String?
+  password      String?
+  role          String    @default("PENDING") // ADMIN, PENDING, USER
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  approvedAt    DateTime? // 승인 일자 추가
   accounts      Account[]
-  posts         Post[]
   sessions      Session[]
+  posts         Post[]    // 사용자가 쓴 글 목록
+  blog          Blog?     // 사용자당 하나의 블로그
 }
 
 model VerificationToken {
@@ -53,14 +58,31 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model Blog {
+  id          String   @id @default(cuid())
+  title       String   // 블로그 제목
+  description String?  // 블로그 설명
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String   @unique  // 블로그 소유자
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  posts       Post[]   // 블로그의 글들
+  isPublic    Boolean  @default(true)  // 블로그 공개 여부
+  customUrl   String   @unique  // 커스텀 URL (예: username.blog.com)
+}
+
 model Post {
   id        String   @id @default(cuid())
   title     String
-  content   String
-  published Boolean  @default(false)
+  description String? // 요약문 추가
+  content   String   @db.Text
+  published Boolean  @default(false)  // 발행 여부
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   authorId  String
-  viewCount Int      @default(0)
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  blogId    String   // 블로그 ID 추가
+  blog      Blog     @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  viewCount Int      @default(0)
+  year      Int?     // 리뷰 연도
 }

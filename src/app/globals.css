@@ -142,12 +142,21 @@
 .prose iframe {
   aspect-ratio: 16/9;
   width: 100% !important;
+  max-width: 560px !important;
   height: auto !important;
   border-radius: 12px;
   display: block;
   margin-left: auto;
   margin-right: auto;
   background: #000;
+}
+.prose img {
+  max-width: 100% !important;
+  height: auto !important;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: 8px;
 }
 
 @media (max-width: 640px) {

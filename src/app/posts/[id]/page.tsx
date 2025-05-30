@@ -4,17 +4,21 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/app/api/auth/[...nextauth]/options"
 import prisma from "@/lib/prisma"
 import { ContentRenderer } from "@/components/ContentRenderer"
+import { Metadata } from "next"
+import PostActions from "@/components/PostActions"
 
 interface Post {
   id: string
   title: string
   content: string
-  createdAt: Date
+  createdAt: string | Date
+  updatedAt: string | Date
+  viewCount: number
   author: {
     name: string | null
     email: string | null
   }
-  viewCount: number
+  description?: string | null
 }
 
 async function getPost(id: string) {
@@ -33,7 +37,7 @@ async function getPost(id: string) {
 
     if (!post) {
       throw new Error("Post not found")
-        }
+    }
 
     // Update view count
     await prisma.post.update({
@@ -42,9 +46,38 @@ async function getPost(id: string) {
     })
 
     return post
-      } catch (error) {
-        console.error("Error fetching post:", error)
+  } catch (error) {
+    console.error("Error fetching post:", error)
     throw error
+  }
+}
+
+// 동적 메타데이터 생성
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  try {
+    const post = await getPost(params.id)
+    const description = post.description || post.content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 150)
+    return {
+      title: `${post.title} | Royal Kim's Blog`,
+      description,
+      openGraph: {
+        title: post.title,
+        description,
+        type: 'article',
+        publishedTime: post.createdAt.toISOString(),
+        authors: [post.author.name || 'Royal Kim'],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: post.title,
+        description,
+      },
+    }
+  } catch (error) {
+    return {
+      title: 'Post Not Found | Royal Kim\'s Blog',
+      description: 'The requested post could not be found.',
+    }
   }
 }
 
@@ -86,33 +119,19 @@ export default async function PostPage({ params }: { params: { id: string } }) {
       <div className="mx-auto w-full max-w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl">
         <div className="bg-white rounded-lg shadow-sm p-2 sm:p-4 md:p-6 w-full">
           <h1 className="text-lg sm:text-2xl font-bold text-gray-900 mb-2 break-words">{post.title}</h1>
-          <div className="flex flex-col gap-1 text-xs sm:text-sm text-gray-500 mb-2 border-b pb-2">
-            <span>작성자: {post.author.name}</span>
-            <span>{post.createdAt.toLocaleDateString()}</span>
+          <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs sm:text-sm text-gray-500 mb-2 border-b pb-2 items-center">
+            <span><b>작성자:</b> {post.author.name}</span>
+            <span><b>작성일:</b> {new Date(post.createdAt).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+            <span><b>최근 수정일:</b> {new Date(post.updatedAt).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
             <span className="flex items-center gap-1">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
-              조회수: {post.viewCount}
+              <b>조회수:</b> {post.viewCount}
             </span>
           </div>
-          <div className="flex flex-row justify-center items-center gap-2 w-full max-w-xs mx-auto mt-4 mb-6">
-            {session?.user?.email && post.author.email && session.user.email === post.author.email && (
-              <Link
-                href={`/posts/${post.id}/edit`}
-                className="w-auto px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
-              >
-                수정하기
-              </Link>
-            )}
-            <Link
-              href="/"
-              className="w-auto px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
-            >
-              목록으로
-            </Link>
-          </div>
+          <PostActions postId={post.id} canEdit={!!(session?.user?.email && post.author.email && session.user.email === post.author.email)} />
           <div className="prose prose-pink max-w-none mt-4">
             <ContentRenderer content={post.content} />
           </div>

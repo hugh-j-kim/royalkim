@@ -10,6 +10,7 @@ export default function NewPostPage() {
   const { data: session, status } = useSession()
   const [title, setTitle] = React.useState("")
   const [content, setContent] = React.useState("")
+  const [description, setDescription] = React.useState("")
   const [isSubmitting, setIsSubmitting] = React.useState(false)
 
   // 로그인하지 않은 사용자는 메인 페이지로 리다이렉트
@@ -30,20 +31,14 @@ export default function NewPostPage() {
 
     setIsSubmitting(true)
     try {
-      // YouTube URL을 iframe으로 변환
-      const processedContent = content
-        .replace(/youtube\.com\/shorts\/([^"&?\/\s]+)/g, 'youtube.com/embed/$1')
-        .replace(/youtu\.be\/([^"&?\/\s]+)/g, 'youtube.com/embed/$1')
-        .replace(/<video[^>]*>.*?<\/video>/g, (_: string) => {
-          const srcMatch = _?.match(/src="([^"]+)"/);
-          if (srcMatch && srcMatch[1]) {
-            const videoId = srcMatch[1].split('/').pop()?.split('?')[0];
-            if (videoId) {
-              return `<iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="aspect-ratio: 16/9; width: 100%; max-width: 800px; margin: 2rem auto;"></iframe>`;
-            }
-          }
-          return _ || '';
-        });
+      // 이미 iframe이 있으면 변환하지 않고, 유튜브 URL만 변환
+      let processedContent = content
+      if (!/<iframe[\s\S]*?>[\s\S]*?<\/iframe>/.test(content)) {
+        processedContent = content
+          .replace(/https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|embed\/|shorts\/)?([\w-]{11})[\S]*/g, (_: string, __, ___, ____, videoId: string) => {
+            return `<iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" allowfullscreen style="aspect-ratio: 16/9; width: 100%; max-width: 800px; margin: 2rem auto;"></iframe>`;
+          })
+      }
 
       const response = await fetch("/api/posts", {
         method: "POST",
@@ -52,6 +47,7 @@ export default function NewPostPage() {
         },
         body: JSON.stringify({
           title,
+          description,
           content: processedContent,
         }),
       })
@@ -109,20 +105,35 @@ export default function NewPostPage() {
             />
           </div>
           <div>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+              요약 (검색엔진/공유용)
+            </label>
+            <input
+              id="description"
+              name="description"
+              type="text"
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 mt-1 mb-4"
+              placeholder="이 글을 한두 문장으로 요약해 주세요 (검색엔진, SNS 공유에 사용됩니다)"
+              maxLength={150}
+            />
+          </div>
+          <div>
             <label
               htmlFor="content"
               className="block text-sm font-medium text-gray-700"
             >
               내용
             </label>
-            <div className="w-full min-h-[70vh] border border-gray-300 rounded-md overflow-hidden">
-              <div className="w-full h-[70vh] relative">
+            <div className="w-full min-h-[65vh] border border-gray-300 rounded-md overflow-hidden">
+              <div className="w-full h-[65vh] relative">
                 <Editor
                   apiKey="ctj7vwd103i0za3euzbfwqx8lx1hlmp2z8w0wlc7puz1pho2"
                   value={stripYoutubeDiv(content)}
                   onEditorChange={(content) => setContent(content)}
                   init={{
-                    height: '70vh',
+                    height: '65vh',
                     menubar: true,
                     plugins: [
                       'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',

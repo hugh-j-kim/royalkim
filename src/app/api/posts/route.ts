@@ -1,27 +1,38 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
-import { authOptions } from "../auth/[...nextauth]/options"
+import { authOptions } from "@/app/api/auth/[...nextauth]/options"
 import prisma from "@/lib/prisma"
 
-export async function GET() {
+export async function GET(_request: Request) {
   try {
+    const session: any = await getServerSession(authOptions)
+    
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
+    // 로그인한 사용자의 글만 조회
     const posts = await prisma.post.findMany({
       where: {
+        authorId: session.user.id,
         published: true
-      },
-      orderBy: {
-        createdAt: "desc",
       },
       include: {
         author: {
           select: {
-            name: true,
-          },
-        },
+            name: true
+          }
+        }
       },
+      orderBy: {
+        createdAt: "desc"
+      }
     })
 
-    return NextResponse.json(posts)
+    return NextResponse.json({ posts })
   } catch (error) {
     console.error("Error fetching posts:", error)
     return NextResponse.json(
@@ -41,10 +52,13 @@ export async function POST(request: Request) {
       )
     }
 
-    const { title, content } = await request.json()
+    const { title, description, content } = await request.json()
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
+      include: {
+        blog: true,
+      },
     })
 
     if (!user) {
@@ -54,14 +68,20 @@ export async function POST(request: Request) {
       )
     }
 
-    // HTML 태그 정리 및 YouTube URL 변환 제거, content를 그대로 저장
-    const processedContent = content;
+    if (!user.blog) {
+      return NextResponse.json(
+        { error: "Blog not found. Please create a blog first." },
+        { status: 404 }
+      )
+    }
 
     const post = await prisma.post.create({
       data: {
         title,
-        content: processedContent,
+        description,
+        content,
         authorId: user.id,
+        blogId: user.blog.id,
         published: true
       },
       include: {
@@ -69,6 +89,12 @@ export async function POST(request: Request) {
           select: {
             name: true,
             email: true,
+          },
+        },
+        blog: {
+          select: {
+            title: true,
+            customUrl: true,
           },
         },
       },
