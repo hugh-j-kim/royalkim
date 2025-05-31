@@ -15,7 +15,7 @@ export async function GET(_request: Request) {
       )
     }
 
-    // 모든 사용자 조회
+    // 모든 사용자 조회 (삭제된 계정도 포함)
     const users = await prisma.user.findMany({
       select: {
         id: true,
@@ -24,6 +24,7 @@ export async function GET(_request: Request) {
         role: true,
         createdAt: true,
         approvedAt: true,
+        deletedAt: true,
       },
       orderBy: {
         createdAt: "desc",

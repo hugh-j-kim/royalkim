@@ -18,13 +18,6 @@ interface Post {
   viewCount: number
 }
 
-interface PostsResponse {
-  posts: Post[]
-  total: number
-  page: number
-  totalPages: number
-}
-
 // 카드 상단 미디어 추출 함수
 function getFirstMedia(content: string) {
   // 1. 유튜브 iframe 추출
@@ -74,39 +67,29 @@ function getFirstMedia(content: string) {
   );
 }
 
+const WINDOW_SIZE = 30
+const SLIDE_SIZE = 10
+
 export default function Home() {
   const { data: session } = useSession()
   const [posts, setPosts] = useState<Post[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [page, setPage] = useState(1)
-  const [hasMore, setHasMore] = useState(true)
+  const [offset, setOffset] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
   const [hasPrevious, setHasPrevious] = useState(false)
 
-  const fetchPosts = async (pageNum: number) => {
+  const fetchPosts = async (offsetValue: number) => {
     try {
-      const response = await fetch("/api/posts")
-      
+      const response = await fetch(`/api/posts?offset=${offsetValue}&limit=${WINDOW_SIZE}`)
       if (!response.ok) {
         throw new Error("Failed to fetch posts")
       }
-      
-      const data: PostsResponse = await response.json()
-      
-      if (pageNum === 1) {
-        setPosts(data.posts)
-      } else {
-        // 30개 초과 시 맨 위 10개 제거
-        if (posts.length + data.posts.length > 30) {
-          setPosts(prev => [...prev.slice(10), ...data.posts])
-          setHasPrevious(true)
-        } else {
-          setPosts(prev => [...prev, ...data.posts])
-        }
-      }
-      
-      setHasMore(data.page < data.totalPages)
-      setPage(data.page)
+      const data = await response.json()
+      setPosts(data.posts)
+      setOffset(offsetValue)
+      setHasMore(data.hasMore)
+      setHasPrevious(data.hasPrevious)
     } catch (error) {
       console.error("Error fetching posts:", error)
       setError(error instanceof Error ? error.message : "Failed to fetch posts")
@@ -116,37 +99,17 @@ export default function Home() {
   }
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const postsResponse = await fetch("/api/posts")
-
-        if (!postsResponse.ok) {
-          throw new Error("Failed to fetch data")
-        }
-
-        const postsData = await postsResponse.json()
-
-        setPosts(postsData.posts)
-      } catch (error) {
-        console.error("Error fetching data:", error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
     if (session?.user) {
-      fetchData()
+      fetchPosts(0)
     }
   }, [session])
 
   const handleLoadMore = () => {
-    fetchPosts(page + 1)
+    fetchPosts(offset + SLIDE_SIZE)
   }
 
   const handleLoadPrevious = () => {
-    if (page > 1) {
-      fetchPosts(page - 1)
-    }
+    fetchPosts(Math.max(0, offset - SLIDE_SIZE))
   }
 
   if (!session) {

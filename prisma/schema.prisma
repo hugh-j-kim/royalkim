@@ -44,10 +44,12 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   approvedAt    DateTime? // 승인 일자 추가
+  deletedAt     DateTime? // 삭제 일자(soft delete)
   accounts      Account[]
   sessions      Session[]
   posts         Post[]    // 사용자가 쓴 글 목록
   blog          Blog?     // 사용자당 하나의 블로그
+  deleteLogs    UserDeleteLog[] @relation("UserDeleteLogs")
 }
 
 model VerificationToken {
@@ -85,4 +87,16 @@ model Post {
   blog      Blog     @relation(fields: [blogId], references: [id], onDelete: Cascade)
   viewCount Int      @default(0)
   year      Int?     // 리뷰 연도
+}
+
+model UserDeleteLog {
+  id         String   @id @default(cuid())
+  userId     String
+  email      String?
+  name       String?
+  deletedBy  String   // 삭제를 실행한 관리자 ID
+  deletedAt  DateTime @default(now())
+  reason     String?
+  roleAtDelete String? // 삭제 당시의 role (nullable)
+  user       User     @relation("UserDeleteLogs", fields: [userId], references: [id])
 }

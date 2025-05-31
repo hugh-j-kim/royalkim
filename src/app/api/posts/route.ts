@@ -3,42 +3,32 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/app/api/auth/[...nextauth]/options"
 import prisma from "@/lib/prisma"
 
-export async function GET(_request: Request) {
+export async function GET(request: Request) {
   try {
     const session: any = await getServerSession(authOptions)
-    
     if (!session?.user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
-
-    // 로그인한 사용자의 글만 조회
+    // offset/limit 파라미터
+    const { searchParams } = new URL(request.url)
+    const offset = parseInt(searchParams.get("offset") || "0", 10)
+    const limit = parseInt(searchParams.get("limit") || "30", 10)
+    // 전체 글 수
+    const total = await prisma.post.count({ where: { authorId: session.user.id, published: true } })
+    // 해당 범위의 글
     const posts = await prisma.post.findMany({
-      where: {
-        authorId: session.user.id,
-        published: true
-      },
-      include: {
-        author: {
-          select: {
-            name: true
-          }
-        }
-      },
-      orderBy: {
-        createdAt: "desc"
-      }
+      where: { authorId: session.user.id, published: true },
+      include: { author: { select: { name: true } } },
+      orderBy: { createdAt: "desc" },
+      skip: offset,
+      take: limit,
     })
-
-    return NextResponse.json({ posts })
+    const hasMore = offset + limit < total
+    const hasPrevious = offset > 0
+    return NextResponse.json({ posts, total, offset, limit, hasMore, hasPrevious })
   } catch (error) {
     console.error("Error fetching posts:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch posts" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Failed to fetch posts" }, { status: 500 })
   }
 }
 
