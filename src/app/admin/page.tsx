@@ -90,10 +90,10 @@ export default function AdminPage() {
   const approvedUsers = users.filter(user => user.role === "USER")
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-pink-500">관리자 페이지</h1>
+    <div className="min-h-screen bg-gray-50 p-2 sm:p-8">
+      <div className="max-w-4xl mx-auto w-full">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-8 gap-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-pink-500">관리자 페이지</h1>
           <Link
             href="/"
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
@@ -102,106 +102,127 @@ export default function AdminPage() {
           </Link>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">승인 대기 중인 사용자</h2>
+        {/* 승인 대기 중인 사용자 */}
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6 mb-4 sm:mb-8">
+          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">승인 대기 중인 사용자</h2>
           {pendingUsers.length === 0 ? (
             <p className="text-gray-500">승인 대기 중인 사용자가 없습니다.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이름</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이메일</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">가입일</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">작업</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {pendingUsers.map((user) => (
-                    <tr key={user.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">{user.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {(() => {
-                          const date = new Date(user.createdAt);
-                          const year = date.getFullYear();
-                          const month = String(date.getMonth() + 1).padStart(2, '0');
-                          const day = String(date.getDate()).padStart(2, '0');
-                          const hours = String(date.getHours()).padStart(2, '0');
-                          const minutes = String(date.getMinutes()).padStart(2, '0');
-                          const seconds = String(date.getSeconds()).padStart(2, '0');
-                          return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-                        })()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => handleApprove(user.id)}
-                          className="px-4 py-2 text-sm font-medium text-white bg-pink-600 rounded-md hover:bg-pink-700"
-                        >
-                          승인
-                        </button>
-                      </td>
+            <>
+              {/* 데스크탑: 테이블, 모바일: 카드형 */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="min-w-full text-xs sm:text-sm">
+                  <thead>
+                    <tr>
+                      <th className="px-2 py-1">ID</th>
+                      <th className="px-2 py-1">이름</th>
+                      <th className="px-2 py-1">이메일</th>
+                      <th className="px-2 py-1">권한</th>
+                      <th className="px-2 py-1">가입일</th>
+                      <th className="px-2 py-1">작업</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {pendingUsers.map((user) => (
+                      <tr key={user.id}>
+                        <td className="px-2 py-1 break-all">{user.id}</td>
+                        <td className="px-2 py-1">{user.name}</td>
+                        <td className="px-2 py-1 break-all">{user.email}</td>
+                        <td className="px-2 py-1">{user.role}</td>
+                        <td className="px-2 py-1">{formatDate(user.createdAt)}</td>
+                        <td className="px-2 py-1">
+                          <button
+                            onClick={() => handleApprove(user.id)}
+                            className="px-3 py-1 text-xs sm:text-sm font-medium text-white bg-pink-600 rounded-md hover:bg-pink-700"
+                          >
+                            승인
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="sm:hidden flex flex-col gap-2">
+                {pendingUsers.map((user) => (
+                  <div key={user.id} className="border rounded-lg p-3 flex flex-col gap-1 bg-pink-50">
+                    <div className="text-xs text-gray-500">ID: <span className="break-all">{user.id}</span></div>
+                    <div className="font-semibold">{user.name} <span className="ml-2 text-xs text-gray-400">({user.role})</span></div>
+                    <div className="text-xs text-gray-500">이메일: <span className="break-all">{user.email}</span></div>
+                    <div className="text-xs text-gray-500">가입일: {formatDate(user.createdAt)}</div>
+                    <button
+                      onClick={() => handleApprove(user.id)}
+                      className="mt-2 px-3 py-1 text-xs font-medium text-white bg-pink-600 rounded-md hover:bg-pink-700 w-full"
+                    >
+                      승인
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-xl font-semibold mb-4">승인된 사용자</h2>
+        {/* 승인된 사용자 */}
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6">
+          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">승인된 사용자</h2>
           {approvedUsers.length === 0 ? (
             <p className="text-gray-500">승인된 사용자가 없습니다.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이름</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이메일</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">가입일</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">승인일</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {approvedUsers.map((user) => (
-                    <tr key={user.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">{user.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {(() => {
-                          const date = new Date(user.createdAt);
-                          const year = date.getFullYear();
-                          const month = String(date.getMonth() + 1).padStart(2, '0');
-                          const day = String(date.getDate()).padStart(2, '0');
-                          const hours = String(date.getHours()).padStart(2, '0');
-                          const minutes = String(date.getMinutes()).padStart(2, '0');
-                          const seconds = String(date.getSeconds()).padStart(2, '0');
-                          return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-                        })()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {user.approvedAt ? (() => {
-                          const date = new Date(user.approvedAt);
-                          const year = date.getFullYear();
-                          const month = String(date.getMonth() + 1).padStart(2, '0');
-                          const day = String(date.getDate()).padStart(2, '0');
-                          const hours = String(date.getHours()).padStart(2, '0');
-                          const minutes = String(date.getMinutes()).padStart(2, '0');
-                          const seconds = String(date.getSeconds()).padStart(2, '0');
-                          return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-                        })() : "-"}
-                      </td>
+            <>
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="min-w-full text-xs sm:text-sm">
+                  <thead>
+                    <tr>
+                      <th className="px-2 py-1">ID</th>
+                      <th className="px-2 py-1">이름</th>
+                      <th className="px-2 py-1">이메일</th>
+                      <th className="px-2 py-1">권한</th>
+                      <th className="px-2 py-1">가입일</th>
+                      <th className="px-2 py-1">승인일</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {approvedUsers.map((user) => (
+                      <tr key={user.id}>
+                        <td className="px-2 py-1 break-all">{user.id}</td>
+                        <td className="px-2 py-1">{user.name}</td>
+                        <td className="px-2 py-1 break-all">{user.email}</td>
+                        <td className="px-2 py-1">{user.role}</td>
+                        <td className="px-2 py-1">{formatDate(user.createdAt)}</td>
+                        <td className="px-2 py-1">{user.approvedAt ? formatDate(user.approvedAt) : '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="sm:hidden flex flex-col gap-2">
+                {approvedUsers.map((user) => (
+                  <div key={user.id} className="border rounded-lg p-3 flex flex-col gap-1 bg-gray-50">
+                    <div className="text-xs text-gray-500">ID: <span className="break-all">{user.id}</span></div>
+                    <div className="font-semibold">{user.name} <span className="ml-2 text-xs text-gray-400">({user.role})</span></div>
+                    <div className="text-xs text-gray-500">이메일: <span className="break-all">{user.email}</span></div>
+                    <div className="text-xs text-gray-500">가입일: {formatDate(user.createdAt)}</div>
+                    <div className="text-xs text-gray-500">승인일: {user.approvedAt ? formatDate(user.approvedAt) : '-'}</div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>
     </div>
   )
+}
+
+// 날짜 포맷 함수
+function formatDate(dateStr: string) {
+  const date = new Date(dateStr)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  const seconds = String(date.getSeconds()).padStart(2, '0')
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
 } 
