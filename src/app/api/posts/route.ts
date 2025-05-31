@@ -13,11 +13,18 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const offset = parseInt(searchParams.get("offset") || "0", 10)
     const limit = parseInt(searchParams.get("limit") || "30", 10)
-    // 전체 글 수
-    const total = await prisma.post.count({ where: { authorId: session.user.id, published: true } })
-    // 해당 범위의 글
+    const searchField = searchParams.get("searchField")
+    const search = searchParams.get("search")
+    // 검색 조건 동적 생성
+    let where: any = { authorId: session.user.id, published: true }
+    if (search && searchField && (searchField === "title" || searchField === "content")) {
+      where[searchField] = { contains: search, mode: "insensitive" }
+    }
+    // 전체 글 수 (검색 적용)
+    const total = await prisma.post.count({ where })
+    // 해당 범위의 글 (검색 적용)
     const posts = await prisma.post.findMany({
-      where: { authorId: session.user.id, published: true },
+      where,
       include: { author: { select: { name: true } } },
       orderBy: { createdAt: "desc" },
       skip: offset,

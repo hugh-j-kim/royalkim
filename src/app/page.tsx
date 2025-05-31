@@ -3,7 +3,7 @@
 import React from "react"
 import { useSession, signOut } from "next-auth/react"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 
 interface Post {
   id: string
@@ -78,10 +78,21 @@ export default function Home() {
   const [offset, setOffset] = useState(0)
   const [hasMore, setHasMore] = useState(false)
   const [hasPrevious, setHasPrevious] = useState(false)
+  const [total, setTotal] = useState(0)
+  const [searchField, setSearchField] = useState<'title' | 'content'>('title')
+  const [searchQuery, setSearchQuery] = useState('')
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
-  const fetchPosts = async (offsetValue: number) => {
+  const fetchPosts = async (offsetValue: number, customSearchField?: string, customSearchQuery?: string) => {
     try {
-      const response = await fetch(`/api/posts?offset=${offsetValue}&limit=${WINDOW_SIZE}`)
+      const params = new URLSearchParams()
+      params.append('offset', String(offsetValue))
+      params.append('limit', String(WINDOW_SIZE))
+      if ((customSearchQuery ?? searchQuery).trim()) {
+        params.append('searchField', customSearchField ?? searchField)
+        params.append('search', customSearchQuery ?? searchQuery)
+      }
+      const response = await fetch(`/api/posts?${params.toString()}`)
       if (!response.ok) {
         throw new Error("Failed to fetch posts")
       }
@@ -90,6 +101,7 @@ export default function Home() {
       setOffset(offsetValue)
       setHasMore(data.hasMore)
       setHasPrevious(data.hasPrevious)
+      setTotal(data.total)
     } catch (error) {
       console.error("Error fetching posts:", error)
       setError(error instanceof Error ? error.message : "Failed to fetch posts")
@@ -110,6 +122,20 @@ export default function Home() {
 
   const handleLoadPrevious = () => {
     fetchPosts(Math.max(0, offset - SLIDE_SIZE))
+  }
+
+  const handleFirst = () => {
+    fetchPosts(0)
+  }
+
+  const handleLast = () => {
+    const lastOffset = Math.max(0, total - WINDOW_SIZE)
+    fetchPosts(lastOffset)
+  }
+
+  const handleSearch = (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
+    fetchPosts(0, searchField, searchQuery)
   }
 
   if (!session) {
@@ -177,6 +203,33 @@ export default function Home() {
           </div>
         </div>
 
+        {/* 검색 UI */}
+        <form className="flex flex-col sm:flex-row gap-2 mb-4 items-center" onSubmit={handleSearch}>
+          <select
+            className="border rounded-md px-2 py-1 text-sm"
+            value={searchField}
+            onChange={e => setSearchField(e.target.value as 'title' | 'content')}
+          >
+            <option value="title">제목</option>
+            <option value="content">내용</option>
+          </select>
+          <input
+            ref={searchInputRef}
+            type="text"
+            className="flex-1 border rounded-md px-3 py-1 text-sm"
+            placeholder="검색어를 입력하세요"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') handleSearch() }}
+          />
+          <button
+            type="submit"
+            className="px-4 py-1 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600"
+          >
+            검색
+          </button>
+        </form>
+
         {error ? (
           <div className="text-center py-12">
             <p className="text-red-600">오류가 발생했습니다: {error}</p>
@@ -188,7 +241,13 @@ export default function Home() {
         ) : (
           <>
             {hasPrevious && (
-              <div className="flex justify-center mb-4">
+              <div className="flex justify-center mb-4 gap-2">
+                <button
+                  onClick={handleFirst}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
+                >
+                  처음으로
+                </button>
                 <button
                   onClick={handleLoadPrevious}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
@@ -229,12 +288,18 @@ export default function Home() {
               ))}
             </div>
             {hasMore && (
-              <div className="flex justify-center mt-8">
+              <div className="flex justify-center mt-8 gap-2">
                 <button
                   onClick={handleLoadMore}
                   className="px-4 py-2 text-sm font-medium text-white bg-pink-600 border border-transparent rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
                 >
                   더보기
+                </button>
+                <button
+                  onClick={handleLast}
+                  className="px-4 py-2 text-sm font-medium text-white bg-pink-600 border border-transparent rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
+                >
+                  끝으로
                 </button>
               </div>
             )}
