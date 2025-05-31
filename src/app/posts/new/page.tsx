@@ -38,7 +38,7 @@ export default function NewPostPage() {
           .replace(/https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|embed\/|shorts\/)?([\w-]{11})[\S]*/g, (_: string, __, ___, ____, videoId: string) => {
             return `<iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" allowfullscreen style="aspect-ratio: 16/9; width: 100%; max-width: 800px; margin: 2rem auto;"></iframe>`;
           })
-      }
+          }
 
       const response = await fetch("/api/posts", {
         method: "POST",

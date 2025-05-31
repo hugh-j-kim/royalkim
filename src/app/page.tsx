@@ -3,7 +3,8 @@
 import React from "react"
 import { useSession, signOut } from "next-auth/react"
 import Link from "next/link"
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useContext } from "react"
+import { LanguageContext } from "@/components/Providers"
 
 interface Post {
   id: string
@@ -70,6 +71,49 @@ function getFirstMedia(content: string) {
 const WINDOW_SIZE = 30
 const SLIDE_SIZE = 10
 
+const I18N: Record<string, { [key: string]: string }> = {
+  ko: {
+    blogTitle: "Royal Kim's Blog",
+    home: "홈으로",
+    admin: "관리페이지",
+    newPost: "새 글 작성",
+    logout: "로그아웃",
+    login: "로그인",
+    searchPlaceholder: "검색어를 입력하세요",
+    search: "검색",
+    first: "처음으로",
+    prev: "이전 글 보기",
+    more: "더보기",
+    last: "끝으로",
+    noPosts: "아직 작성된 글이 없습니다.",
+    error: "오류가 발생했습니다:",
+    loading: "로딩 중...",
+    welcome: "로그인하여 서비스를 이용해보세요.",
+    title: "제목",
+    content: "내용",
+  },
+  en: {
+    blogTitle: "Royal Kim's Blog",
+    home: "Home",
+    admin: "Admin Page",
+    newPost: "New Post",
+    logout: "Logout",
+    login: "Login",
+    searchPlaceholder: "Enter search keyword",
+    search: "Search",
+    first: "First",
+    prev: "Previous",
+    more: "More",
+    last: "Last",
+    noPosts: "No posts yet.",
+    error: "An error occurred:",
+    loading: "Loading...",
+    welcome: "Please log in to use the service.",
+    title: "Title",
+    content: "Content",
+  }
+}
+
 export default function Home() {
   const { data: session } = useSession()
   const [posts, setPosts] = useState<Post[]>([])
@@ -82,6 +126,7 @@ export default function Home() {
   const [searchField, setSearchField] = useState<'title' | 'content'>('title')
   const [searchQuery, setSearchQuery] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const { lang } = useContext(LanguageContext)
 
   const fetchPosts = async (offsetValue: number, customSearchField?: string, customSearchQuery?: string) => {
     try {
@@ -142,13 +187,13 @@ export default function Home() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-pink-500 mb-4">Welcome to Royal Kim</h1>
-          <p className="text-gray-600 mb-8">로그인하여 서비스를 이용해보세요.</p>
+          <h1 className="text-4xl font-bold text-pink-500 mb-4">{I18N[lang].blogTitle}</h1>
+          <p className="text-gray-600 mb-8">{I18N[lang].welcome}</p>
           <Link
             href="/auth/signin"
             className="px-6 py-3 bg-pink-500 text-white rounded-md hover:bg-pink-600 transition-colors"
           >
-            로그인
+            {I18N[lang].login}
           </Link>
         </div>
       </div>
@@ -158,7 +203,7 @@ export default function Home() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-2xl text-pink-500">Loading...</div>
+        <div className="text-2xl text-pink-500">{I18N[lang].loading}</div>
       </div>
     )
   }
@@ -174,7 +219,7 @@ export default function Home() {
                 href="/admin"
                 className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
-                관리페이지
+                {I18N[lang].admin}
               </Link>
             )}
             {session ? (
@@ -183,13 +228,13 @@ export default function Home() {
                   href="/posts/new"
                   className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
                 >
-                  새 글 작성
+                  {I18N[lang].newPost}
                 </Link>
                 <button
                   onClick={() => signOut()}
                   className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
                 >
-                  로그아웃
+                  {I18N[lang].logout}
                 </button>
               </>
             ) : (
@@ -197,7 +242,7 @@ export default function Home() {
                 href="/auth/signin"
                 className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
               >
-                로그인
+                {I18N[lang].login}
               </Link>
             )}
           </div>
@@ -210,14 +255,14 @@ export default function Home() {
             value={searchField}
             onChange={e => setSearchField(e.target.value as 'title' | 'content')}
           >
-            <option value="title">제목</option>
-            <option value="content">내용</option>
+            <option value="title">{I18N[lang].title}</option>
+            <option value="content">{I18N[lang].content}</option>
           </select>
           <input
             ref={searchInputRef}
             type="text"
             className="flex-1 border rounded-md px-3 py-1 text-sm"
-            placeholder="검색어를 입력하세요"
+            placeholder={I18N[lang].searchPlaceholder}
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') handleSearch() }}
@@ -226,17 +271,17 @@ export default function Home() {
             type="submit"
             className="px-4 py-1 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600"
           >
-            검색
+            {I18N[lang].search}
           </button>
         </form>
 
         {error ? (
           <div className="text-center py-12">
-            <p className="text-red-600">오류가 발생했습니다: {error}</p>
+            <p className="text-red-600">{I18N[lang].error} {error}</p>
           </div>
         ) : posts.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-600">아직 작성된 글이 없습니다.</p>
+            <p className="text-gray-600">{I18N[lang].noPosts}</p>
           </div>
         ) : (
           <>
@@ -246,13 +291,13 @@ export default function Home() {
                   onClick={handleFirst}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
                 >
-                  처음으로
+                  {I18N[lang].first}
                 </button>
                 <button
                   onClick={handleLoadPrevious}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
                 >
-                  이전 글 보기
+                  {I18N[lang].prev}
                 </button>
               </div>
             )}
@@ -293,13 +338,13 @@ export default function Home() {
                   onClick={handleLoadMore}
                   className="px-4 py-2 text-sm font-medium text-white bg-pink-600 border border-transparent rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
                 >
-                  더보기
+                  {I18N[lang].more}
                 </button>
                 <button
                   onClick={handleLast}
                   className="px-4 py-2 text-sm font-medium text-white bg-pink-600 border border-transparent rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
                 >
-                  끝으로
+                  {I18N[lang].last}
                 </button>
               </div>
             )}

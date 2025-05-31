@@ -41,7 +41,7 @@ export default function SignUp() {
         setError(data.error || "회원가입 중 오류가 발생했습니다.")
       }
     } catch (error) {
-      setError("회원가입 중 오류가 발생했습니다.")
+        setError("회원가입 중 오류가 발생했습니다.")
     } finally {
       setIsLoading(false)
     }

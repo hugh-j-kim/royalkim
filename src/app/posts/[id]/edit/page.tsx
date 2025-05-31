@@ -9,7 +9,7 @@ async function getPost(id: string) {
   const post = await prisma.post.findUnique({
     where: { id },
     include: {
-      author: {
+  author: {
         select: {
           email: true,
         },
