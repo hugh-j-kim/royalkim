@@ -129,7 +129,7 @@ export default function Home() {
   const { lang } = useContext(LanguageContext)
 
   const fetchPosts = async (offsetValue: number, customSearchField?: string, customSearchQuery?: string) => {
-    try {
+      try {
       const params = new URLSearchParams()
       params.append('offset', String(offsetValue))
       params.append('limit', String(WINDOW_SIZE))
@@ -138,22 +138,22 @@ export default function Home() {
         params.append('search', customSearchQuery ?? searchQuery)
       }
       const response = await fetch(`/api/posts?${params.toString()}`)
-      if (!response.ok) {
+        if (!response.ok) {
         throw new Error("Failed to fetch posts")
-      }
-      const data = await response.json()
+        }
+        const data = await response.json()
       setPosts(data.posts)
       setOffset(offsetValue)
       setHasMore(data.hasMore)
       setHasPrevious(data.hasPrevious)
       setTotal(data.total)
-    } catch (error) {
-      console.error("Error fetching posts:", error)
-      setError(error instanceof Error ? error.message : "Failed to fetch posts")
-    } finally {
-      setIsLoading(false)
+      } catch (error) {
+        console.error("Error fetching posts:", error)
+        setError(error instanceof Error ? error.message : "Failed to fetch posts")
+      } finally {
+        setIsLoading(false)
+      }
     }
-  }
 
   useEffect(() => {
     if (session?.user) {
@@ -302,36 +302,36 @@ export default function Home() {
               </div>
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 lg:gap-8">
-              {posts.map((post) => (
-                <Link
-                  key={post.id}
-                  href={`/posts/${post.id}`}
+            {posts.map((post) => (
+              <Link
+                key={post.id}
+                href={`/posts/${post.id}`}
                   className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 h-full"
-                >
-                  <div className="flex flex-col h-full">
+              >
+                <div className="flex flex-col h-full">
                     <div className="relative w-full aspect-video mb-1 overflow-hidden rounded-lg">
                       {getFirstMedia(post.content)}
-                    </div>
+                        </div>
                     <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-0 mt-0 line-clamp-2 px-3">
-                      {post.title}
-                    </h2>
+                    {post.title}
+                  </h2>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs sm:text-sm text-gray-500 gap-1 sm:gap-2 px-3 pb-2 pt-0">
-                      <span>{post.author.name}</span>
-                      <div className="flex items-center gap-2">
-                        <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-                        <span className="flex items-center gap-1">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                          {post.viewCount}
-                        </span>
-                      </div>
+                    <span>{post.author.name}</span>
+                    <div className="flex items-center gap-2">
+                      <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                      <span className="flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        {post.viewCount}
+                      </span>
                     </div>
                   </div>
-                </Link>
-              ))}
-            </div>
+                </div>
+              </Link>
+            ))}
+          </div>
             {hasMore && (
               <div className="flex justify-center mt-8 gap-2">
                 <button

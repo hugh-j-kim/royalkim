@@ -4,8 +4,34 @@ import React from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { Editor } from '@tinymce/tinymce-react'
+import { useContext } from "react"
+import { LanguageContext } from "@/components/Providers"
+
+const I18N: Record<string, { [key: string]: string }> = {
+  ko: {
+    newPost: "새 글 작성",
+    title: "제목",
+    summary: "요약 (검색엔진/공유용)",
+    summaryPlaceholder: "이 글을 한두 문장으로 요약해 주세요 (검색엔진, SNS 공유에 사용됩니다)",
+    content: "내용",
+    loginRequired: "로그인이 필요합니다.",
+    error: "포스트 작성 중 오류가 발생했습니다.",
+    loading: "로딩 중...",
+  },
+  en: {
+    newPost: "New Post",
+    title: "Title",
+    summary: "Summary (for search engines/sharing)",
+    summaryPlaceholder: "Please summarize this post in one or two sentences (used for search engines and social media sharing)",
+    content: "Content",
+    loginRequired: "Login required.",
+    error: "An error occurred while creating the post.",
+    loading: "Loading...",
+  }
+}
 
 export default function NewPostPage() {
+  const { lang } = useContext(LanguageContext)
   const router = useRouter()
   const { data: session, status } = useSession()
   const [title, setTitle] = React.useState("")
@@ -24,7 +50,7 @@ export default function NewPostPage() {
     e.preventDefault()
     
     if (status !== "authenticated" || !session?.user?.email) {
-      alert("로그인이 필요합니다.")
+      alert(I18N[lang].loginRequired)
       router.push("/auth/signin")
       return
     }
@@ -54,13 +80,13 @@ export default function NewPostPage() {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || "포스트 작성에 실패했습니다.")
+        throw new Error(errorData.error || I18N[lang].error)
       }
 
       router.push("/")
     } catch (error) {
       console.error("Error creating post:", error)
-      alert(error instanceof Error ? error.message : "포스트 작성 중 오류가 발생했습니다.")
+      alert(error instanceof Error ? error.message : I18N[lang].error)
     } finally {
       setIsSubmitting(false)
     }
@@ -77,7 +103,7 @@ export default function NewPostPage() {
   if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500"></div>
+        <div className="text-2xl text-pink-500">{I18N[lang].loading}</div>
       </div>
     )
   }
@@ -89,11 +115,11 @@ export default function NewPostPage() {
   return (
     <div className="w-full px-2 sm:px-4 md:px-6">
       <div className="max-w-[1100px] mx-auto">
-        <h1 className="text-2xl sm:text-3xl font-bold text-pink-500 mb-4 sm:mb-8">새 글 작성</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-pink-500 mb-4 sm:mb-8">{I18N[lang].newPost}</h1>
         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           <div>
             <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-              제목
+              {I18N[lang].title}
             </label>
             <input
               id="title"
@@ -106,7 +132,7 @@ export default function NewPostPage() {
           </div>
           <div>
             <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-              요약 (검색엔진/공유용)
+              {I18N[lang].summary}
             </label>
             <input
               id="description"
@@ -115,7 +141,7 @@ export default function NewPostPage() {
               value={description}
               onChange={e => setDescription(e.target.value)}
               className="w-full border border-gray-300 rounded-md px-3 py-2 mt-1 mb-4"
-              placeholder="이 글을 한두 문장으로 요약해 주세요 (검색엔진, SNS 공유에 사용됩니다)"
+              placeholder={I18N[lang].summaryPlaceholder}
               maxLength={150}
             />
           </div>
@@ -124,7 +150,7 @@ export default function NewPostPage() {
               htmlFor="content"
               className="block text-sm font-medium text-gray-700"
             >
-              내용
+              {I18N[lang].content}
             </label>
             <div className="w-full min-h-[65vh] border border-gray-300 rounded-md overflow-hidden">
               <div className="w-full h-[65vh] relative">

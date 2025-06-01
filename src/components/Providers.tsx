@@ -42,21 +42,23 @@ export default function Providers({
       <LanguageContext.Provider value={{ lang, setLang }}>
         <div className="bg-pink-50 min-h-screen flex flex-col">
           <header className="fixed top-0 left-0 right-0 bg-pink-50/80 backdrop-blur-sm z-50 border-b border-pink-100">
-            <div className="container mx-auto px-4 py-6 flex items-center justify-between">
-              <div className="flex-1" />
-              <div className="flex-1 flex justify-center">
-                <Logo />
-              </div>
-              <div className="flex-1 flex justify-start items-center gap-2" style={{ paddingLeft: '200px' }}>
-                <select
-                  className="border rounded-md px-2 py-1 text-sm"
-                  value={lang}
-                  onChange={handleLangChange}
-                >
-                  {LANGUAGES.map(l => (
-                    <option key={l.code} value={l.code}>{l.label}</option>
-                  ))}
-                </select>
+            <div className="max-w-5xl mx-auto px-10 py-6">
+              <div className="flex items-center justify-between">
+                <div className="w-1/6" />
+                <div className="w-3/5 flex justify-center">
+                  <Logo />
+                </div>
+                <div className="w-1/6 flex justify-center">
+                  <select
+                    className="border rounded-md px-2 py-1 text-sm"
+                    value={lang}
+                    onChange={handleLangChange}
+                  >
+                    {LANGUAGES.map(l => (
+                      <option key={l.code} value={l.code}>{l.label}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
           </header>

@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useContext } from "react"
 import { useRouter } from "next/navigation"
 import { Editor } from "@tinymce/tinymce-react"
+import { LanguageContext } from "@/components/Providers"
 
 interface Post {
   id: string
@@ -18,26 +19,58 @@ interface PostEditorProps {
   post: Post
 }
 
+const I18N: Record<string, { [key: string]: string }> = {
+  ko: {
+    editTitle: "글 수정하기",
+    title: "제목",
+    summary: "요약 (검색엔진/공유용)",
+    summaryPlaceholder: "이 글을 한두 문장으로 요약해 주세요 (검색엔진, SNS 공유에 사용됩니다)",
+    content: "내용",
+    viewCount: "조회수",
+    createdAt: "생성일",
+    updatedAt: "최근 수정일",
+    cancel: "취소",
+    edit: "수정하기",
+    editing: "수정 중...",
+    editError: "글 수정에 실패했습니다.",
+  },
+  en: {
+    editTitle: "Edit Post",
+    title: "Title",
+    summary: "Summary (for search engines/sharing)",
+    summaryPlaceholder: "Summarize this post in one or two sentences (used for search engines and social sharing)",
+    content: "Content",
+    viewCount: "Views",
+    createdAt: "Created",
+    updatedAt: "Last Updated",
+    cancel: "Cancel",
+    edit: "Edit",
+    editing: "Editing...",
+    editError: "Failed to edit post.",
+  }
+}
+
 export function PostEditor({ post }: PostEditorProps) {
   const router = useRouter()
+  const { lang } = useContext(LanguageContext)
   const [title, setTitle] = useState(post.title)
   const [description, setDescription] = useState(post.description || "")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const editorRef = useRef<any>(null)
 
-  // 날짜 포맷 함수
-  function formatDate(date: string | Date | undefined) {
-    if (!date) return "-";
-    const d = typeof date === "string" ? new Date(date) : date;
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  const formatDate = (date?: string | Date) => {
+    if (!date) return '-'
+    return new Date(date).toLocaleString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
   }
 
-  // div+iframe 구조를 iframe만 남기도록 변환
-  function stripYoutubeDiv(content: string) {
-    return content.replace(
-      /<div[^>]*style="[^"]*padding-bottom:56.25%;[^"]*"[^>]*>\s*<iframe([^>]*)><\/iframe>\s*<\/div>/g,
-      '<iframe$1></iframe>'
-    );
+  const stripYoutubeDiv = (content: string) => {
+    return content.replace(/<div class="youtube-embed">([\s\S]*?)<\/div>/g, '$1')
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -69,7 +102,7 @@ export function PostEditor({ post }: PostEditorProps) {
       router.push(`/posts/${post.id}`)
     } catch (error) {
       console.error("Error updating post:", error)
-      alert("글 수정에 실패했습니다.")
+      alert(I18N[lang].editError)
     } finally {
       setIsSubmitting(false)
     }
@@ -77,16 +110,19 @@ export function PostEditor({ post }: PostEditorProps) {
 
   return (
     <form onSubmit={handleSubmit} className="w-full">
+      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8 text-center">
+        {I18N[lang].editTitle}
+      </h1>
       {/* 포스트 정보 표시 */}
       <div className="mb-4 flex flex-wrap gap-4 text-sm text-gray-500">
-        <div>조회수: <span className="font-semibold">{post.viewCount ?? '-'}</span></div>
-        <div>생성일: <span className="font-semibold">{formatDate(post.createdAt)}</span></div>
-        <div>최근 수정일: <span className="font-semibold">{formatDate(post.updatedAt)}</span></div>
+        <div>{I18N[lang].viewCount}: <span className="font-semibold">{post.viewCount ?? '-'}</span></div>
+        <div>{I18N[lang].createdAt}: <span className="font-semibold">{formatDate(post.createdAt)}</span></div>
+        <div>{I18N[lang].updatedAt}: <span className="font-semibold">{formatDate(post.updatedAt)}</span></div>
       </div>
       <div className="space-y-4 sm:space-y-6 w-full">
         <div className="w-full">
           <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-            제목
+            {I18N[lang].title}
           </label>
           <input
             type="text"
@@ -99,7 +135,7 @@ export function PostEditor({ post }: PostEditorProps) {
         </div>
         <div>
           <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-            요약 (검색엔진/공유용)
+            {I18N[lang].summary}
           </label>
           <input
             id="description"
@@ -108,13 +144,13 @@ export function PostEditor({ post }: PostEditorProps) {
             value={description}
             onChange={e => setDescription(e.target.value)}
             className="w-full border border-gray-300 rounded-md px-3 py-2 mt-1 mb-2"
-            placeholder="이 글을 한두 문장으로 요약해 주세요 (검색엔진, SNS 공유에 사용됩니다)"
+            placeholder={I18N[lang].summaryPlaceholder}
             maxLength={150}
           />
         </div>
         <div className="w-full">
           <label htmlFor="content" className="block text-sm font-medium text-gray-700">
-            내용
+            {I18N[lang].content}
           </label>
           <div className="w-full min-h-[60vh] border border-gray-300 rounded-md overflow-hidden">
             <Editor
@@ -125,7 +161,7 @@ export function PostEditor({ post }: PostEditorProps) {
               init={{
                 height: "60vh",
                 menubar: true,
-                language: "ko",
+                language: lang,
                 plugins: [
                   "advlist", "autolink", "lists", "link", "image", "media", "charmap", "preview", "anchor",
                   "searchreplace", "visualblocks", "code", "fullscreen",
@@ -165,14 +201,14 @@ export function PostEditor({ post }: PostEditorProps) {
             onClick={() => router.push(`/posts/${post.id}`)}
             className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
           >
-            취소
+            {I18N[lang].cancel}
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
             className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? "수정 중..." : "수정하기"}
+            {isSubmitting ? I18N[lang].editing : I18N[lang].edit}
           </button>
         </div>
       </div>
