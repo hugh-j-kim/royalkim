@@ -1,9 +1,18 @@
 "use client"
 
-import { useState, useRef, useContext } from "react"
+import { useState, useRef, useContext, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Editor } from "@tinymce/tinymce-react"
 import { LanguageContext } from "@/components/Providers"
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage"
+import { initializeApp } from "firebase/app"
+import CategorySelect from "@/components/CategorySelect"
+
+interface Category {
+  id: string
+  name: string
+  description: string | null
+}
 
 interface Post {
   id: string
@@ -13,10 +22,14 @@ interface Post {
   updatedAt?: string | Date
   viewCount?: number
   description?: string | null
+  categoryId?: string | null
+  published: boolean
 }
 
 interface PostEditorProps {
   post: Post
+  onSubmit?: (data: any) => Promise<void>
+  isSubmitting?: boolean
 }
 
 const I18N: Record<string, { [key: string]: string }> = {
@@ -33,6 +46,10 @@ const I18N: Record<string, { [key: string]: string }> = {
     edit: "수정하기",
     editing: "수정 중...",
     editError: "글 수정에 실패했습니다.",
+    category: "카테고리",
+    selectCategory: "카테고리 선택",
+    noCategory: "카테고리 없음",
+    publish: "게시",
   },
   en: {
     editTitle: "Edit Post",
@@ -47,16 +64,54 @@ const I18N: Record<string, { [key: string]: string }> = {
     edit: "Edit",
     editing: "Editing...",
     editError: "Failed to edit post.",
+    category: "Category",
+    selectCategory: "Select Category",
+    noCategory: "No Category",
+    publish: "Publish",
   }
 }
 
-export function PostEditor({ post }: PostEditorProps) {
+const firebaseConfig = {
+  apiKey: "AIzaSyApThOThn_cT2heKV_W3JJ4o71-c4yWofw",
+  authDomain: "royalkim.firebaseapp.com",
+  projectId: "royalkim",
+  storageBucket: "royalkim.firebasestorage.app",
+  messagingSenderId: "1052940584501",
+  appId: "1:1052940584501:web:96da5ff02c3ad14785537c",
+  measurementId: "G-1929TKXLQP"
+}
+
+const app = initializeApp(firebaseConfig)
+const storage = getStorage(app)
+
+export function PostEditor({ post, onSubmit, isSubmitting: externalIsSubmitting }: PostEditorProps) {
   const router = useRouter()
   const { lang } = useContext(LanguageContext)
   const [title, setTitle] = useState(post.title)
   const [description, setDescription] = useState(post.description || "")
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [internalIsSubmitting, setInternalIsSubmitting] = useState(false)
+  const [categories, setCategories] = useState<Category[]>([])
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(post.categoryId || "")
   const editorRef = useRef<any>(null)
+  const [editorContent, setEditorContent] = useState(post.content)
+  const [published, setPublished] = useState(post.published)
+
+  const isSubmitting = externalIsSubmitting ?? internalIsSubmitting
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/categories')
+        if (response.ok) {
+          const data = await response.json()
+          setCategories(data)
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error)
+      }
+    }
+    fetchCategories()
+  }, [])
 
   const formatDate = (date?: string | Date) => {
     if (!date) return '-'
@@ -75,9 +130,8 @@ export function PostEditor({ post }: PostEditorProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
-    try {
-      let content = editorRef.current?.getContent() || ""
+    if (onSubmit) {
+      let content = editorContent
       // 이미 iframe이 있으면 변환하지 않고, 유튜브 URL만 변환
       if (!/<iframe[\s\S]*?>[\s\S]*?<\/iframe>/.test(content)) {
         content = content
@@ -85,26 +139,47 @@ export function PostEditor({ post }: PostEditorProps) {
             return `<iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" allowfullscreen style="aspect-ratio: 16/9; width: 100%; max-width: 800px; margin: 2rem auto;"></iframe>`;
           })
       }
-      const response = await fetch(`/api/posts/${post.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title,
-          description,
-          content: stripYoutubeDiv(content),
-        }),
+      await onSubmit({
+        title,
+        description,
+        content: stripYoutubeDiv(content),
+        categoryId: selectedCategoryId || null,
+        published,
       })
-      if (!response.ok) {
-        throw new Error("Failed to update post")
+    } else {
+      setInternalIsSubmitting(true)
+      try {
+        let content = editorContent
+        // 이미 iframe이 있으면 변환하지 않고, 유튜브 URL만 변환
+        if (!/<iframe[\s\S]*?>[\s\S]*?<\/iframe>/.test(content)) {
+          content = content
+            .replace(/https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|embed\/|shorts\/)?([\w-]{11})[\S]*/g, (_: string, _www: string, _domain: string, _path: string, videoId: string) => {
+              return `<iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" allowfullscreen style="aspect-ratio: 16/9; width: 100%; max-width: 800px; margin: 2rem auto;"></iframe>`;
+            })
+        }
+        const response = await fetch(`/api/posts/${post.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title,
+            description,
+            content: stripYoutubeDiv(content),
+            categoryId: selectedCategoryId || null,
+            published,
+          }),
+        })
+        if (!response.ok) {
+          throw new Error("Failed to update post")
+        }
+        router.push(`/posts/${post.id}`)
+      } catch (error) {
+        console.error("Error updating post:", error)
+        alert(I18N[lang].editError)
+      } finally {
+        setInternalIsSubmitting(false)
       }
-      router.push(`/posts/${post.id}`)
-    } catch (error) {
-      console.error("Error updating post:", error)
-      alert(I18N[lang].editError)
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -148,18 +223,31 @@ export function PostEditor({ post }: PostEditorProps) {
             maxLength={150}
           />
         </div>
+        <CategorySelect value={selectedCategoryId} onChange={setSelectedCategoryId} />
+        <div className="flex items-center gap-2 mb-4">
+          <input
+            type="checkbox"
+            id="published"
+            checked={published}
+            onChange={(e) => setPublished(e.target.checked)}
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+          <label htmlFor="published" className="block text-sm font-medium text-gray-700">
+            {I18N[lang].publish}
+          </label>
+        </div>
         <div className="w-full">
           <label htmlFor="content" className="block text-sm font-medium text-gray-700">
             {I18N[lang].content}
           </label>
-          <div className="w-full min-h-[60vh] border border-gray-300 rounded-md overflow-hidden">
+          <div className="w-full min-h-[50vh] border border-gray-300 rounded-md overflow-hidden">
             <Editor
               apiKey={process.env.NEXT_PUBLIC_ROYALKIM_TINYMCE_APIKEY}
               onInit={(_evt: any, editor: any) => (editorRef.current = editor)}
-              value={stripYoutubeDiv(post.content)}
-              onEditorChange={(content) => editorRef.current = content}
+              value={stripYoutubeDiv(editorContent)}
+              onEditorChange={(content) => setEditorContent(content)}
               init={{
-                height: "60vh",
+                height: "50vh",
                 menubar: true,
                 language: lang,
                 plugins: [
@@ -183,30 +271,30 @@ export function PostEditor({ post }: PostEditorProps) {
                     border-radius: 12px;
                   }
                   `,
-                images_upload_handler: (blobInfo: any) => {
-                  return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result as string);
-                    reader.onerror = () => reject("이미지 업로드 실패");
-                    reader.readAsDataURL(blobInfo.blob());
-                  });
+                images_upload_handler: (blobInfo: any, success: any, failure: any, _progress?: any) => {
+                  const file = blobInfo.blob();
+                  const storageRef = ref(storage, `image/${Date.now()}_${file.name}`);
+                  uploadBytes(storageRef, file)
+                    .then(() => getDownloadURL(storageRef))
+                    .then((url) => success(url))
+                    .catch((err) => failure("업로드 실패: " + err.message));
                 },
               }}
             />
           </div>
         </div>
-        <div className="flex justify-end gap-4">
+        <div className="flex justify-end space-x-4">
           <button
             type="button"
-            onClick={() => router.push(`/posts/${post.id}`)}
-            className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
+            onClick={() => router.back()}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
           >
             {I18N[lang].cancel}
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm font-medium text-white bg-pink-600 border border-transparent rounded-md shadow-sm hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 disabled:opacity-50"
           >
             {isSubmitting ? I18N[lang].editing : I18N[lang].edit}
           </button>

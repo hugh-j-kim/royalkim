@@ -11,28 +11,41 @@ export async function GET(request: Request) {
     }
     // offset/limit 파라미터
     const { searchParams } = new URL(request.url)
-    const offset = parseInt(searchParams.get("offset") || "0", 10)
-    const limit = parseInt(searchParams.get("limit") || "30", 10)
-    const searchField = searchParams.get("searchField")
-    const search = searchParams.get("search")
-    // 검색 조건 동적 생성
-    let where: any = { authorId: session.user.id, published: true }
-    if (search && searchField && (searchField === "title" || searchField === "content")) {
-      where[searchField] = { contains: search, mode: "insensitive" }
-    }
-    // 전체 글 수 (검색 적용)
-    const total = await prisma.post.count({ where })
-    // 해당 범위의 글 (검색 적용)
-    const posts = await prisma.post.findMany({
-      where,
-      include: { author: { select: { name: true } } },
-      orderBy: { createdAt: "desc" },
-      skip: offset,
-      take: limit,
+    const page = parseInt(searchParams.get("page") || "1")
+    const limit = parseInt(searchParams.get("limit") || "10")
+    const skip = (page - 1) * limit
+
+    const [posts, total] = await Promise.all([
+      prisma.post.findMany({
+        where: {
+          userId: session.user.id,
+          published: true,
+        },
+        include: {
+          category: true,
+          series: true,
+          tags: true,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        skip,
+        take: limit,
+      }),
+      prisma.post.count({
+        where: {
+          userId: session.user.id,
+          published: true,
+        },
+      }),
+    ])
+
+    return NextResponse.json({
+      posts,
+      total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
     })
-    const hasMore = offset + limit < total
-    const hasPrevious = offset > 0
-    return NextResponse.json({ posts, total, offset, limit, hasMore, hasPrevious })
   } catch (error) {
     console.error("Error fetching posts:", error)
     return NextResponse.json({ error: "Failed to fetch posts" }, { status: 500 })
@@ -49,13 +62,10 @@ export async function POST(request: Request) {
       )
     }
 
-    const { title, description, content } = await request.json()
+    const { title, description, content, categoryId } = await request.json()
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      include: {
-        blog: true,
-      },
     })
 
     if (!user) {
@@ -65,33 +75,26 @@ export async function POST(request: Request) {
       )
     }
 
-    if (!user.blog) {
-      return NextResponse.json(
-        { error: "Blog not found. Please create a blog first." },
-        { status: 404 }
-      )
-    }
-
     const post = await prisma.post.create({
       data: {
         title,
         description,
         content,
-        authorId: user.id,
-        blogId: user.blog.id,
-        published: true
+        userId: user.id,
+        published: true,
+        categoryId: categoryId || null,
       },
       include: {
-        author: {
+        user: {
           select: {
             name: true,
             email: true,
           },
         },
-        blog: {
+        category: {
           select: {
-            title: true,
-            customUrl: true,
+            id: true,
+            name: true,
           },
         },
       },

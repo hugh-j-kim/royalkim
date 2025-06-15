@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server"
-import { hash } from "bcryptjs"
+import bcrypt from "bcryptjs"
 import prisma from "@/lib/prisma"
 
 export async function POST(request: Request) {
   try {
-    const { name, email, password, blogName } = await request.json()
+    const body = await request.json()
+    const { name, email, password } = body
 
-    if (!name || !email || !password || !blogName) {
+    if (!name || !email || !password) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -19,30 +20,25 @@ export async function POST(request: Request) {
 
     if (existingUser) {
       return NextResponse.json(
-        { error: "User already exists" },
+        { error: "Email already exists" },
         { status: 400 }
       )
     }
 
-    const hashedPassword = await hash(password, 12)
+    const hashedPassword = await bcrypt.hash(password, 12)
 
     const user = await prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
-        role: "PENDING",
-        blog: {
-          create: {
-            title: blogName,
-            customUrl: email.split('@')[0] // 이메일의 @ 앞부분을 기본 URL로 사용
-          }
-        }
+        role: "PENDING"
       }
     })
 
     return NextResponse.json({
       user: {
+        id: user.id,
         name: user.name,
         email: user.email,
         role: user.role
@@ -51,7 +47,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Error in register:", error)
     return NextResponse.json(
-      { error: "Error creating user" },
+      { error: "Failed to register user" },
       { status: 500 }
     )
   }

@@ -14,11 +14,15 @@ interface Post {
   createdAt: string | Date
   updatedAt: string | Date
   viewCount: number
-  author: {
+  user: {
     name: string | null
     email: string | null
   }
   description?: string | null
+  category?: {
+    id: string
+    name: string
+  }
 }
 
 const I18N: Record<string, { [key: string]: string }> = {
@@ -46,7 +50,7 @@ export default function PostPageClient({ post }: { post: Post }) {
         <div className="bg-white rounded-lg shadow-sm p-2 sm:p-4 md:p-6 w-full">
           <h1 className="text-lg sm:text-2xl font-bold text-gray-900 mb-2 break-words">{post.title}</h1>
           <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs sm:text-sm text-gray-500 mb-2 border-b pb-2 items-center">
-            <span><b>{I18N[lang].author}:</b> {post.author.name}</span>
+            <span><b>{I18N[lang].author}:</b> {post.user.name}</span>
             <span><b>{I18N[lang].createdAt}:</b> {new Date(post.createdAt).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
             <span><b>{I18N[lang].updatedAt}:</b> {new Date(post.updatedAt).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
             <span className="flex items-center gap-1">
@@ -56,8 +60,13 @@ export default function PostPageClient({ post }: { post: Post }) {
               </svg>
               <b>{I18N[lang].viewCount}:</b> {post.viewCount}
             </span>
+            {post.category && (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800">
+                {post.category.name}
+              </span>
+            )}
           </div>
-          <PostActions postId={post.id} canEdit={!!(session?.user?.email && post.author.email && session.user.email === post.author.email)} />
+          <PostActions postId={post.id} canEdit={!!(session?.user?.email && post.user.email && session.user.email === post.user.email)} />
           <div className="prose prose-pink max-w-none mt-4">
             <ContentRenderer content={post.content} />
           </div>

@@ -1,52 +1,55 @@
-import React from "react"
+import { Metadata } from "next"
+import { notFound } from "next/navigation"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/app/api/auth/[...nextauth]/options"
 import prisma from "@/lib/prisma"
-import { redirect } from "next/navigation"
-import { PostEditor } from "@/components/PostEditor"
+import EditPostForm from "./EditPostForm"
+
+interface Props {
+  params: { id: string }
+}
 
 async function getPost(id: string) {
   const post = await prisma.post.findUnique({
     where: { id },
     include: {
-  author: {
+      user: {
         select: {
           email: true,
         },
       },
+      category: true,
+      tags: true,
     },
   })
 
   if (!post) {
-    throw new Error("Post not found")
+    notFound()
   }
 
   return post
 }
 
-export default async function EditPostPage({
-  params,
-}: {
-  params: { id: string }
-}) {
-  const session: any = await getServerSession(authOptions)
-  if (!session) {
-    redirect("/auth/signin")
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const post = await getPost(params.id)
+
+  return {
+    title: `Edit: ${post.title}`,
+    description: post.description || undefined,
+  }
+}
+
+export default async function EditPostPage({ params }: Props) {
+  const session = await getServerSession(authOptions)
+  if (!session?.user?.email) {
+    notFound()
   }
 
   const post = await getPost(params.id)
 
-  if (session.user?.email !== post.author.email) {
-    redirect("/")
+  if (post.user.email !== session.user.email) {
+    notFound()
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="w-full max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
-        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 md:p-8">
-          <PostEditor post={post} />
-        </div>
-      </div>
-    </div>
-  )
+  return <EditPostForm post={post} />
 } 

@@ -2,17 +2,21 @@
 
 import { SessionProvider } from "next-auth/react"
 import Logo from "@/components/Logo"
-import React, { useEffect, useState, createContext } from "react"
+import React, { useEffect, useState, createContext, useContext } from "react"
+import { translations } from "@/i18n/translations"
 
 export const LanguageContext = createContext({
   lang: 'ko',
   setLang: (_: string) => {},
+  t: (key: string) => key,
 });
 
 const LANGUAGES = [
   { code: 'ko', label: '한국어' },
   { code: 'en', label: 'English' },
 ]
+
+export const useLanguage = () => useContext(LanguageContext);
 
 export default function Providers({
   children,
@@ -39,7 +43,7 @@ export default function Providers({
 
   return (
     <SessionProvider session={session}>
-      <LanguageContext.Provider value={{ lang, setLang }}>
+      <LanguageContext.Provider value={{ lang, setLang, t: (key: string) => translations[lang]?.[key] || key }}>
         <div className="bg-pink-50 min-h-screen flex flex-col">
           <header className="fixed top-0 left-0 right-0 bg-pink-50/80 backdrop-blur-sm z-50 border-b border-pink-100">
             <div className="max-w-5xl mx-auto px-10 py-6">

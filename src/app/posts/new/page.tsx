@@ -1,11 +1,14 @@
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { Editor } from '@tinymce/tinymce-react'
 import { useContext } from "react"
 import { LanguageContext } from "@/components/Providers"
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage"
+import { initializeApp } from "firebase/app"
+import CategorySelect from "@/components/CategorySelect"
 
 const I18N: Record<string, { [key: string]: string }> = {
   ko: {
@@ -17,6 +20,7 @@ const I18N: Record<string, { [key: string]: string }> = {
     loginRequired: "로그인이 필요합니다.",
     error: "포스트 작성 중 오류가 발생했습니다.",
     loading: "로딩 중...",
+    publish: "게시"
   },
   en: {
     newPost: "New Post",
@@ -27,8 +31,22 @@ const I18N: Record<string, { [key: string]: string }> = {
     loginRequired: "Login required.",
     error: "An error occurred while creating the post.",
     loading: "Loading...",
+    publish: "Publish"
   }
 }
+
+const firebaseConfig = {
+  apiKey: "AIzaSyApThOThn_cT2heKV_W3JJ4o71-c4yWofw",
+  authDomain: "royalkim.firebaseapp.com",
+  projectId: "royalkim",
+  storageBucket: "royalkim.firebasestorage.app",
+  messagingSenderId: "1052940584501",
+  appId: "1:1052940584501:web:96da5ff02c3ad14785537c",
+  measurementId: "G-1929TKXLQP"
+}
+
+const app = initializeApp(firebaseConfig)
+const storage = getStorage(app)
 
 export default function NewPostPage() {
   const { lang } = useContext(LanguageContext)
@@ -38,6 +56,8 @@ export default function NewPostPage() {
   const [content, setContent] = React.useState("")
   const [description, setDescription] = React.useState("")
   const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [categoryId, setCategoryId] = useState<string>("")
+  const [published, setPublished] = useState(false)
 
   // 로그인하지 않은 사용자는 메인 페이지로 리다이렉트
   React.useEffect(() => {
@@ -75,6 +95,8 @@ export default function NewPostPage() {
           title,
           description,
           content: processedContent,
+          published,
+          categoryId: categoryId || null,
         }),
       })
 
@@ -83,7 +105,8 @@ export default function NewPostPage() {
         throw new Error(errorData.error || I18N[lang].error)
       }
 
-      router.push("/")
+      const post = await response.json()
+      router.push(`/posts/${post.id}`)
     } catch (error) {
       console.error("Error creating post:", error)
       alert(error instanceof Error ? error.message : I18N[lang].error)
@@ -145,6 +168,7 @@ export default function NewPostPage() {
               maxLength={150}
             />
           </div>
+          <CategorySelect value={categoryId} onChange={setCategoryId} />
           <div>
             <label
               htmlFor="content"
@@ -152,14 +176,14 @@ export default function NewPostPage() {
             >
               {I18N[lang].content}
             </label>
-            <div className="w-full min-h-[65vh] border border-gray-300 rounded-md overflow-hidden">
-              <div className="w-full h-[65vh] relative">
+            <div className="w-full min-h-[55vh] border border-gray-300 rounded-md overflow-hidden">
+              <div className="w-full h-[55vh] relative">
                 <Editor
                   apiKey="ctj7vwd103i0za3euzbfwqx8lx1hlmp2z8w0wlc7puz1pho2"
                   value={stripYoutubeDiv(content)}
                   onEditorChange={(content) => setContent(content)}
                   init={{
-                    height: '65vh',
+                    height: '55vh',
                     menubar: true,
                     plugins: [
                       'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
@@ -191,23 +215,33 @@ export default function NewPostPage() {
                     custom_elements: 'iframe',
                     valid_children: '+body[style]',
                     valid_elements: '*[*]',
-                    images_upload_handler: async (blobInfo) => {
-                      // 이미지 업로드 핸들러 구현
-                      return new Promise((resolve, reject) => {
-                        const reader = new FileReader()
-                        reader.onload = () => {
-                          resolve(reader.result as string)
-                        }
-                        reader.onerror = () => {
-                          reject('이미지 업로드에 실패했습니다.')
-                        }
-                        reader.readAsDataURL(blobInfo.blob())
-                      })
+                    images_upload_handler: async (blobInfo: any) => {
+                      const file = blobInfo.blob();
+                      const storageRef = ref(storage, `image/${Date.now()}_${file.name}`);
+                      try {
+                        await uploadBytes(storageRef, file);
+                        const url = await getDownloadURL(storageRef);
+                        return url;
+                      } catch (err) {
+                        throw new Error("업로드 실패: " + (err as Error).message);
+                      }
                     }
                   }}
                 />
               </div>
             </div>
+          </div>
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="published"
+              checked={published}
+              onChange={(e) => setPublished(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+            />
+            <label htmlFor="published" className="ml-2 block text-sm text-gray-900">
+              {I18N[lang].publish}
+            </label>
           </div>
           <div className="flex justify-end gap-4">
             <button

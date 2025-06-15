@@ -1,0 +1,28 @@
+export const translations: Record<string, Record<string, string>> = {
+  ko: {
+    categories: "카테고리",
+    newCategory: "새 카테고리",
+    categoryName: "카테고리 이름",
+    description: "설명",
+    publicCategory: "공개 카테고리",
+    cancel: "취소",
+    create: "생성",
+    category: "카테고리",
+    selectCategory: "카테고리 선택",
+    parentCategory: "부모 카테고리",
+    noParentCategory: "(최상위 카테고리)",
+  },
+  en: {
+    categories: "Categories",
+    newCategory: "New Category",
+    categoryName: "Category Name",
+    description: "Description",
+    publicCategory: "Public Category",
+    cancel: "Cancel",
+    create: "Create",
+    category: "Category",
+    selectCategory: "Select Category",
+    parentCategory: "Parent Category",
+    noParentCategory: "(Top-level Category)",
+  },
+}; 

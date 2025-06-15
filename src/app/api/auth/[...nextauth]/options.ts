@@ -1,23 +1,22 @@
-// import type { DefaultSession, NextAuthConfig } from "next-auth"
+import type { DefaultSession, NextAuthConfig } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { compare } from "bcryptjs"
 import prisma from "@/lib/prisma"
 
-// 타입 확장 선언 주석 처리 (타입 에러 우회)
-// declare module "next-auth" {
-//   interface User {
-//     id: string
-//     role?: string | null
-//   }
-//   interface Session extends DefaultSession {
-//     user: {
-//       id: string
-//       role?: string | null
-//     } & DefaultSession["user"]
-//   }
-// }
+declare module "next-auth" {
+  interface User {
+    id: string
+    role?: string | null
+  }
+  interface Session extends DefaultSession {
+    user: {
+      id: string
+      role?: string | null
+    } & DefaultSession["user"]
+  }
+}
 
-export const authOptions = {
+export const authOptions: NextAuthConfig = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -47,7 +46,7 @@ export const authOptions = {
         }
 
         // 승인된 사용자만 로그인 가능
-        if (!(user as any).role || (user as any).role === "PENDING") {
+        if (!user.role || user.role === "PENDING") {
           throw new Error("승인 대기 중인 계정입니다. 관리자 승인 후 로그인해주세요.")
         }
 
@@ -56,14 +55,12 @@ export const authOptions = {
           name: user.name,
           email: user.email,
           image: user.image,
-          // @ts-ignore
-          role: (user as any).role
+          role: user.role
         }
       }
     })
   ],
   callbacks: {
-    // @ts-ignore
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
@@ -71,11 +68,10 @@ export const authOptions = {
       }
       return token
     },
-    // @ts-ignore
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string
-        (session.user as any).role = (token as any).role as string
+        session.user.role = token.role as string
       }
       return session
     }
