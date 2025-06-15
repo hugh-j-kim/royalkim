@@ -11,18 +11,14 @@ interface Post {
   id: string
   title: string
   content: string
-  createdAt: string | Date
-  updatedAt: string | Date
+  createdAt: string
+  updatedAt: string
   viewCount: number
-  user: {
-    name: string | null
-    email: string | null
-  }
+  user: { name: string; email: string }
   description?: string | null
-  category?: {
-    id: string
-    name: string
-  }
+  category: { id: string; name: string } | null
+  tags: { id: string; name: string }[]
+  comments: any[]
 }
 
 const I18N: Record<string, { [key: string]: string }> = {

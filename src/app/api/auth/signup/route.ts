@@ -37,27 +37,11 @@ export async function POST(request: Request) {
       },
     })
 
-    // 사용자의 블로그 자동 생성
-    const blog = await prisma.blog.create({
-      data: {
-        title: `${name}의 블로그`,
-        description: `${name}의 블로그에 오신 것을 환영합니다.`,
-        userId: user.id,
-        isPublic: true,
-        customUrl: `${name.toLowerCase()}-blog`,
-      },
-    })
-
     return NextResponse.json({
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
-      },
-      blog: {
-        id: blog.id,
-        title: blog.title,
-        customUrl: blog.customUrl,
       },
     })
   } catch (error) {

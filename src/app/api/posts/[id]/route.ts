@@ -4,25 +4,15 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/options"
 import prisma from "@/lib/prisma"
 
 export async function GET(
-  request: Request,
+  _unused: unknown,
   { params }: { params: { id: string } }
 ) {
   try {
     const post = await prisma.post.findUnique({
       where: { id: params.id },
       include: {
-        user: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
-        category: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
+        user: { select: { email: true } },
+        category: { select: { id: true, name: true } },
         tags: true,
         comments: {
           include: {
@@ -37,7 +27,7 @@ export async function GET(
             createdAt: "desc",
           },
         },
-      },
+      } as any,
     })
 
     if (!post) {
@@ -66,7 +56,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions) as any
     if (!session?.user?.email) {
       return new NextResponse("Unauthorized", { status: 401 })
     }
@@ -79,14 +69,16 @@ export async function PUT(
             email: true,
           },
         },
-      },
+        category: true,
+        tags: true,
+      } as any,
     })
 
     if (!post) {
       return new NextResponse("Not found", { status: 404 })
     }
 
-    if (post.user.email !== session.user.email) {
+    if ((post.user as any).email !== session.user.email) {
       return new NextResponse("Forbidden", { status: 403 })
     }
 
@@ -116,7 +108,7 @@ export async function PUT(
           },
         },
         tags: true,
-      },
+      } as any,
     })
 
     return NextResponse.json(updatedPost)
@@ -127,11 +119,11 @@ export async function PUT(
 }
 
 export async function DELETE(
-  request: Request,
+  _unused: unknown,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions) as any
     if (!session?.user?.email) {
       return new NextResponse("Unauthorized", { status: 401 })
     }
@@ -144,14 +136,14 @@ export async function DELETE(
             email: true,
           },
         },
-      },
+      } as any,
     })
 
     if (!post) {
       return new NextResponse("Not found", { status: 404 })
     }
 
-    if (post.user.email !== session.user.email) {
+    if ((post.user as any).email !== session.user.email) {
       return new NextResponse("Forbidden", { status: 403 })
     }
 

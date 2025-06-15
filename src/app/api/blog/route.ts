@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server"
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/app/api/auth/[...nextauth]/options"
 import prisma from "@/lib/prisma"
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const user = await prisma.user.findUnique({
       where: {

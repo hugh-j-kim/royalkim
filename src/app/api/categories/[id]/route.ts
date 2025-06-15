@@ -1,14 +1,22 @@
 import { NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "../../../../lib/auth"
 import prisma from "@/lib/prisma"
 
+type SessionWithRole = {
+  user?: {
+    id: string
+    email: string
+    role: string
+  }
+} | null
+
 export async function DELETE(
-  request: Request,
+  _unused: unknown,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = (await getServerSession(authOptions)) as SessionWithRole
 
     if (!session?.user || session.user.role !== "ADMIN") {
       return new NextResponse("Unauthorized", { status: 401 })
@@ -58,7 +66,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = (await getServerSession(authOptions)) as SessionWithRole
 
     if (!session?.user || session.user.role !== "ADMIN") {
       return new NextResponse("Unauthorized", { status: 401 })
@@ -115,11 +123,11 @@ export async function PUT(
 }
 
 export async function GET(
-  request: Request,
+  _unused: unknown,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = (await getServerSession(authOptions)) as SessionWithRole
 
     if (!session?.user || session.user.role !== "ADMIN") {
       return new NextResponse("Unauthorized", { status: 401 })

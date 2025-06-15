@@ -3,22 +3,20 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { PostEditor } from "@/components/PostEditor"
-import { Post } from "@prisma/client"
 
 interface Props {
-  post: Post & {
-    user: {
-      email: string
-    }
-    category: {
-      id: string
-      name: string
-    } | null
-    tags: {
-      id: string
-      name: string
-    }[]
+  post: {
+    id: string
+    title: string
+    content: string
+    description?: string | null
+    published: boolean
+    user: { email: string }
+    category: { id: string; name: string } | null
+    tags: { id: string; name: string }[]
   }
+  onSubmit?: (data: any) => void
+  isSubmitting: boolean
 }
 
 export default function EditPostForm({ post }: Props) {

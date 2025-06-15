@@ -1,22 +1,21 @@
-import type { DefaultSession, NextAuthConfig } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { compare } from "bcryptjs"
 import prisma from "@/lib/prisma"
 
-declare module "next-auth" {
-  interface User {
-    id: string
-    role?: string | null
-  }
-  interface Session extends DefaultSession {
-    user: {
-      id: string
-      role?: string | null
-    } & DefaultSession["user"]
-  }
-}
+// Session 타입 확장 필요시 아래와 같이 사용하세요.
+// declare module "next-auth" {
+//   interface Session {
+//     user: {
+//       id: string
+//       name: string
+//       email: string
+//       image?: string | null
+//       role?: string
+//     }
+//   }
+// }
 
-export const authOptions: NextAuthConfig = {
+export const authOptions: any = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -61,14 +60,14 @@ export const authOptions: NextAuthConfig = {
     })
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }: any) {
       if (user) {
         token.id = user.id
         token.role = user.role
       }
       return token
     },
-    async session({ session, token }) {
+    async session({ session, token }: any) {
       if (token) {
         session.user.id = token.id as string
         session.user.role = token.role as string

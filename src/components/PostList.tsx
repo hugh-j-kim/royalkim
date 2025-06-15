@@ -1,7 +1,7 @@
 import { useState, useContext } from "react"
 import Link from "next/link"
-import { LanguageContext } from "@/contexts/LanguageContext"
-import { I18N } from "@/i18n"
+import { LanguageContext } from "@/components/Providers"
+import { translations as I18N } from "@/i18n/translations"
 
 interface Post {
   id: string

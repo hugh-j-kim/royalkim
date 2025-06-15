@@ -37,7 +37,7 @@ async function getPost(id: string) {
           createdAt: "desc",
         },
       },
-    },
+    } as any,
   })
 
   if (!post) {
@@ -65,7 +65,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: post.description || undefined,
       type: 'article',
       publishedTime: post.createdAt.toISOString(),
-      authors: [post.user.name || 'Royal Kim'],
+      authors: [(post as any).user.name || 'Royal Kim'],
     },
     twitter: {
       card: 'summary_large_image',
@@ -79,7 +79,7 @@ export default async function PostPage({ params }: Props) {
   const post = await getPost(params.id)
   return (
     <div style={{ margin: 0, padding: 0 }}>
-      <PostPageClient post={post} />
+      <PostPageClient post={post as any} />
     </div>
   )
 } 

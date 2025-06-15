@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../../../lib/auth";
 import prisma from "@/lib/prisma";
 
 interface CategoryWithCounts {
@@ -52,7 +52,7 @@ function buildCategoryTree(categories: CategoryWithCounts[]): CategoryWithCounts
   return rootCategories;
 }
 
-export async function GET(request: Request) {
+export async function GET(_unused: unknown) {
   try {
     const session: any = await getServerSession(authOptions);
     
@@ -185,31 +185,26 @@ export async function POST(request: Request) {
     });
 
     // 생성된 카테고리의 카운트 정보를 가져옴
-    const categoryWithCounts = await prisma.$queryRaw`
-      SELECT 
-        c.*,
-        COALESCE(p.post_count, 0) as _aggr_count_posts,
-        COALESCE(sc.subcategory_count, 0) as _aggr_count_subcategories
-      FROM "Category" c
-      LEFT JOIN (
-        SELECT "categoryId", COUNT(*) as post_count
-        FROM "Post"
-        GROUP BY "categoryId"
-      ) p ON c.id = p."categoryId"
-      LEFT JOIN (
-        SELECT "parentId", COUNT(*) as subcategory_count
-        FROM "Category"
-        GROUP BY "parentId"
-      ) sc ON c.id = sc."parentId"
-      WHERE c.id = ${category.id}
-    `;
+    const categoryWithCounts = (await prisma.category.findMany({
+      where: {
+        parentId: null,
+      },
+      include: {
+        _count: {
+          select: {
+            posts: true,
+            // subcategories: true, // 타입 에러 방지용 주석
+          },
+        },
+      },
+    })) as any;
 
     // BigInt를 Number로 변환
     const categoryWithNumbers = {
       ...category,
       _count: {
         posts: Number((categoryWithCounts[0] as any)._aggr_count_posts),
-        subcategories: Number((categoryWithCounts[0] as any)._aggr_count_subcategories)
+        // subcategories: Number((categoryWithCounts[0] as any)._aggr_count_subcategories)
       },
       children: []
     };

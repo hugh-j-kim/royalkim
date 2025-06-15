@@ -8,12 +8,6 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage"
 import { initializeApp } from "firebase/app"
 import CategorySelect from "@/components/CategorySelect"
 
-interface Category {
-  id: string
-  name: string
-  description: string | null
-}
-
 interface Post {
   id: string
   title: string
@@ -90,7 +84,6 @@ export function PostEditor({ post, onSubmit, isSubmitting: externalIsSubmitting 
   const [title, setTitle] = useState(post.title)
   const [description, setDescription] = useState(post.description || "")
   const [internalIsSubmitting, setInternalIsSubmitting] = useState(false)
-  const [categories, setCategories] = useState<Category[]>([])
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(post.categoryId || "")
   const editorRef = useRef<any>(null)
   const [editorContent, setEditorContent] = useState(post.content)
@@ -103,8 +96,8 @@ export function PostEditor({ post, onSubmit, isSubmitting: externalIsSubmitting 
       try {
         const response = await fetch('/api/categories')
         if (response.ok) {
-          const data = await response.json()
-          setCategories(data)
+          // const data = await response.json()
+          // setCategories(data)
         }
       } catch (error) {
         console.error('Error fetching categories:', error)
@@ -271,14 +264,14 @@ export function PostEditor({ post, onSubmit, isSubmitting: externalIsSubmitting 
                     border-radius: 12px;
                   }
                   `,
-                images_upload_handler: (blobInfo: any, success: any, failure: any, _progress?: any) => {
+                images_upload_handler: ((blobInfo: any, success: any, failure: any, _progress?: any) => {
                   const file = blobInfo.blob();
                   const storageRef = ref(storage, `image/${Date.now()}_${file.name}`);
                   uploadBytes(storageRef, file)
                     .then(() => getDownloadURL(storageRef))
                     .then((url) => success(url))
                     .catch((err) => failure("업로드 실패: " + err.message));
-                },
+                }) as any,
               }}
             />
           </div>

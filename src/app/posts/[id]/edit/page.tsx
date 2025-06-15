@@ -20,7 +20,7 @@ async function getPost(id: string) {
       },
       category: true,
       tags: true,
-    },
+    } as any,
   })
 
   if (!post) {
@@ -40,16 +40,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function EditPostPage({ params }: Props) {
-  const session = await getServerSession(authOptions)
+  const session = await getServerSession(authOptions) as any
   if (!session?.user?.email) {
     notFound()
   }
 
   const post = await getPost(params.id)
 
-  if (post.user.email !== session.user.email) {
+  if (((post as any).user as any).email !== session.user.email) {
     notFound()
   }
 
-  return <EditPostForm post={post} />
+  return <EditPostForm post={post as any} isSubmitting={false} />
 } 
