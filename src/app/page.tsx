@@ -352,7 +352,7 @@ export default function Home() {
                       </span>
                     </div>
                   )}
-                  <p className="text-gray-500 text-sm line-clamp-3">
+                  <p className="text-gray-500 text-sm line-clamp-1 overflow-hidden text-ellipsis whitespace-nowrap">
                     {post.content.replace(/<[^>]*>/g, '')}
                   </p>
                 </div>
@@ -362,7 +362,7 @@ export default function Home() {
         )}
 
         {/* 페이지네이션 */}
-        {!isLoading && !error && posts.length > 0 && (
+        {!isLoading && !error && posts.length > 0 && (hasMore || hasPrevious) && (
           <div className="mt-8 flex justify-center space-x-4">
             <button
               onClick={handleFirst}

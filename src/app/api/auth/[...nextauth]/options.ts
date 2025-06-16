@@ -54,7 +54,8 @@ export const authOptions: any = {
           name: user.name,
           email: user.email,
           image: user.image,
-          role: user.role
+          role: user.role,
+          blogTitle: user.blogTitle
         }
       }
     })
@@ -64,6 +65,7 @@ export const authOptions: any = {
       if (user) {
         token.id = user.id
         token.role = user.role
+        token.blogTitle = user.blogTitle
       }
       return token
     },
@@ -71,6 +73,7 @@ export const authOptions: any = {
       if (token) {
         session.user.id = token.id as string
         session.user.role = token.role as string
+        session.user.blogTitle = token.blogTitle as string
       }
       return session
     }

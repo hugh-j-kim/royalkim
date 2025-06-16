@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useContext, useEffect, ReactNode } from "react"
+import { useState, useContext } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Session } from "next-auth"
 import { LanguageContext } from "@/components/Providers"
+import { useCategories } from "@/hooks/useCategories"
 
 interface Category {
   id: string
@@ -29,6 +30,7 @@ const I18N: Record<string, { [key: string]: string }> = {
     creating: "생성 중...",
     createError: "카테고리 생성에 실패했습니다.",
     loading: "로딩 중...",
+    back: "뒤로가기",
   },
   en: {
     newCategory: "New Category",
@@ -42,40 +44,29 @@ const I18N: Record<string, { [key: string]: string }> = {
     creating: "Creating...",
     createError: "Failed to create category.",
     loading: "Loading...",
+    back: "Back",
   }
+}
+
+function flattenCategories(categories: Category[], level = 0): { id: string, name: string }[] {
+  return categories.flatMap(category => [
+    { id: category.id, name: `${'— '.repeat(level)}${category.name}` },
+    ...(category.children ? flattenCategories(category.children, level + 1) : [])
+  ])
 }
 
 export default function NewCategoryPage() {
   const { lang } = useContext(LanguageContext)
-  const { data: session, status } = useSession() as { data: (Session & { user: { role?: string } }) | null, status: string }
+  const { status } = useSession() as { data: (Session & { user: { role?: string } }) | null, status: string }
   const router = useRouter()
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
   const [parentId, setParentId] = useState("")
   const [isPublic, setIsPublic] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [categories, setCategories] = useState<Category[]>([])
+  const { categories, isLoading, error, createCategory } = useCategories()
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch("/api/categories")
-        if (!response.ok) {
-          throw new Error("Failed to fetch categories")
-        }
-        const data = await response.json()
-        setCategories(data)
-      } catch (error) {
-        console.error("Error fetching categories:", error)
-      }
-    }
-
-    if (session?.user) {
-      fetchCategories()
-    }
-  }, [session])
-
-  if (status === "loading") {
+  if (status === "loading" || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-2xl text-pink-500">{I18N[lang].loading}</div>
@@ -83,9 +74,17 @@ export default function NewCategoryPage() {
     )
   }
 
-  if (status === "unauthenticated" || session?.user?.role !== "ADMIN") {
+  if (status === "unauthenticated") {
     router.push("/")
     return null
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-2xl text-red-500">{error}</div>
+      </div>
+    )
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -93,23 +92,12 @@ export default function NewCategoryPage() {
     setIsSubmitting(true)
 
     try {
-      const response = await fetch("/api/categories", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          description,
-          parentId: parentId || null,
-          isPublic
-        }),
+      await createCategory({
+        name,
+        description,
+        parentId: parentId || undefined,
+        isPublic,
       })
-
-      if (!response.ok) {
-        throw new Error(I18N[lang].createError)
-      }
-
       router.push("/admin/categories")
     } catch (error) {
       console.error("Error creating category:", error)
@@ -119,35 +107,23 @@ export default function NewCategoryPage() {
     }
   }
 
-  // 상위 카테고리 옵션을 재귀적으로 렌더링하는 함수
-  const renderParentOptions = (categories: Category[], level = 0): ReactNode[] => {
-    return categories.map((category) => (
-      <>
-        <option key={category.id} value={category.id}>
-          {'　'.repeat(level)}{category.name}
-        </option>
-        {category.children && category.children.length > 0 && (
-          renderParentOptions(category.children, level + 1)
-        )}
-      </>
-    ));
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 p-2 sm:p-8">
-      <div className="max-w-4xl mx-auto w-full">
+      <div className="max-w-7xl mx-auto w-full">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-8 gap-2">
           <h1 className="text-2xl sm:text-3xl font-bold text-pink-500">{I18N[lang].newCategory}</h1>
-          <Link
-            href="/admin/categories"
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-          >
-            {I18N[lang].home}
-          </Link>
+          <div className="flex gap-2">
+            <Link
+              href="/admin/categories"
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              {I18N[lang].back}
+            </Link>
+          </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                 {I18N[lang].categoryName}
@@ -186,7 +162,11 @@ export default function NewCategoryPage() {
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
               >
                 <option value="">{I18N[lang].noParentCategory}</option>
-                {renderParentOptions(categories)}
+                {flattenCategories(categories).map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
               </select>
             </div>
 

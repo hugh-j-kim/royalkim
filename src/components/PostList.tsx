@@ -11,6 +11,8 @@ interface Post {
   user: {
     name: string | null
   }
+  description?: string
+  content?: string
 }
 
 interface PostListProps {
@@ -71,6 +73,9 @@ export function PostList({ posts, onDelete }: PostListProps) {
                 {I18N[lang].viewCount}
               </th>
               <th scope="col" className="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {I18N[lang].description}
+              </th>
+              <th scope="col" className="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {I18N[lang].actions}
               </th>
             </tr>
@@ -95,6 +100,11 @@ export function PostList({ posts, onDelete }: PostListProps) {
                 </td>
                 <td className="px-2 sm:px-4 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">{post.viewCount}</div>
+                </td>
+                <td className="px-2 sm:px-4 py-4 whitespace-nowrap max-w-xs">
+                  <div className="text-sm text-gray-500 overflow-hidden text-ellipsis whitespace-nowrap line-clamp-1">
+                    {post.description || (post.content ? post.content.replace(/<[^>]*>/g, '').slice(0, 100) : '')}
+                  </div>
                 </td>
                 <td className="px-2 sm:px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <Link

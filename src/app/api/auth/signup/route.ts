@@ -4,11 +4,11 @@ import prisma from "@/lib/prisma"
 
 export async function POST(request: Request) {
   try {
-    const { name, email, password } = await request.json()
+    const { name, email, password, blogName } = await request.json()
 
-    if (!email || !password || !name) {
+    if (!email || !password || !name || !blogName) {
       return NextResponse.json(
-        { message: "이메일, 비밀번호, 이름을 모두 입력해주세요." },
+        { message: "이메일, 비밀번호, 이름, 블로그명을 모두 입력해주세요." },
         { status: 400 }
       )
     }
@@ -34,6 +34,7 @@ export async function POST(request: Request) {
         name,
         email,
         password: hashedPassword,
+        blogTitle: blogName,
       },
     })
 

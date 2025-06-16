@@ -1,11 +1,12 @@
 "use client"
 
-import { useEffect, useState, useContext } from "react"
+import { useContext } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Session } from "next-auth"
 import { LanguageContext } from "@/components/Providers"
+import { useCategories } from "@/hooks/useCategories"
 
 interface Category {
   id: string
@@ -67,33 +68,23 @@ const I18N: Record<string, { [key: string]: string }> = {
   }
 }
 
+// 트리 전체에서 id로 카테고리를 찾는 재귀 함수
+function findCategoryById(categories: Category[], id: string | null): Category | undefined {
+  for (const category of categories) {
+    if (category.id === id) return category
+    if (category.children && category.children.length > 0) {
+      const found = findCategoryById(category.children, id)
+      if (found) return found
+    }
+  }
+  return undefined
+}
+
 export default function CategoriesPage() {
   const { lang } = useContext(LanguageContext)
-  const { data: session, status } = useSession() as { data: (Session & { user: { role?: string } }) | null, status: string }
+  const { status } = useSession() as { data: (Session & { user: { role?: string } }) | null, status: string }
   const router = useRouter()
-  const [categories, setCategories] = useState<Category[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch("/api/categories")
-        if (!response.ok) {
-          throw new Error("Failed to fetch categories")
-        }
-        const data = await response.json()
-        setCategories(data)
-      } catch (error) {
-        console.error("Error fetching categories:", error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    if (session?.user?.role === "ADMIN") {
-      fetchCategories()
-    }
-  }, [session])
+  const { categories, isLoading, error, deleteCategory } = useCategories()
 
   if (status === "loading" || isLoading) {
     return (
@@ -103,9 +94,17 @@ export default function CategoriesPage() {
     )
   }
 
-  if (status === "unauthenticated" || session?.user?.role !== "ADMIN") {
+  if (status === "unauthenticated") {
     router.push("/")
     return null
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-2xl text-red-500">{error}</div>
+      </div>
+    )
   }
 
   const handleDelete = async (id: string) => {
@@ -114,16 +113,7 @@ export default function CategoriesPage() {
     }
 
     try {
-      const response = await fetch(`/api/categories/${id}`, {
-        method: "DELETE",
-      })
-
-      if (!response.ok) {
-        const error = await response.text()
-        throw new Error(error || I18N[lang].deleteError)
-      }
-
-      setCategories(categories.filter(category => category.id !== id))
+      await deleteCategory(id)
       alert(I18N[lang].deleteSuccess)
     } catch (error) {
       console.error("Error deleting category:", error)
@@ -133,7 +123,7 @@ export default function CategoriesPage() {
 
   const getParentCategoryName = (parentId: string | null) => {
     if (!parentId) return I18N[lang].noParentCategory
-    const parent = categories.find(c => c.id === parentId)
+    const parent = findCategoryById(categories, parentId)
     return parent ? parent.name : I18N[lang].noParentCategory
   }
 
@@ -195,8 +185,8 @@ export default function CategoriesPage() {
           ))
         )}
       </>
-    );
-  };
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 sm:p-8">
