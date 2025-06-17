@@ -15,12 +15,30 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get("limit") || "10")
     const skip = (page - 1) * limit
 
+    // 검색/카테고리 파라미터
+    const search = searchParams.get("search")?.trim() || ""
+    const searchField = searchParams.get("searchField") || "title"
+    const categoryId = searchParams.get("categoryId") || ""
+
+    // where 조건 생성
+    const where: any = {
+      userId: session.user.id,
+      published: true,
+    }
+    if (search) {
+      if (searchField === "content") {
+        where.content = { contains: search, mode: "insensitive" }
+      } else {
+        where.title = { contains: search, mode: "insensitive" }
+      }
+    }
+    if (categoryId) {
+      where.categoryId = categoryId
+    }
+
     const [posts, total] = await Promise.all([
       prisma.post.findMany({
-        where: {
-          userId: session.user.id,
-          published: true,
-        },
+        where,
         include: {
           category: true,
           series: true,
@@ -33,10 +51,7 @@ export async function GET(request: Request) {
         take: limit,
       }),
       prisma.post.count({
-        where: {
-          userId: session.user.id,
-          published: true,
-        },
+        where,
       }),
     ])
 
