@@ -4,22 +4,67 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 
+// urlId 유효성 검사 함수
+function isValidUrlId(value: string) {
+  return /^[a-z0-9]+$/.test(value)
+}
+
 export default function SignUp() {
   const router = useRouter()
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [urlId, setUrlId] = useState("")
+  const [urlIdError, setUrlIdError] = useState("")
+  const [isUrlIdChecking, setIsUrlIdChecking] = useState(false)
+  const [isUrlIdAvailable, setIsUrlIdAvailable] = useState<boolean|null>(null)
+
+  // urlId 중복 체크
+  const checkUrlId = async () => {
+    setIsUrlIdChecking(true)
+    setUrlIdError("")
+    setIsUrlIdAvailable(null)
+    if (!isValidUrlId(urlId)) {
+      setUrlIdError("영문 소문자와 숫자만 입력하세요.")
+      setIsUrlIdChecking(false)
+      return
+    }
+    try {
+      const res = await fetch(`/api/auth/check-urlid?urlId=${urlId}`)
+      const data = await res.json()
+      if (data.available) {
+        setIsUrlIdAvailable(true)
+      } else {
+        setUrlIdError("이미 사용 중인 url id입니다.")
+        setIsUrlIdAvailable(false)
+      }
+    } catch {
+      setUrlIdError("중복 확인 중 오류가 발생했습니다.")
+      setIsUrlIdAvailable(false)
+    } finally {
+      setIsUrlIdChecking(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError("")
     setIsLoading(true)
-
+    setUrlIdError("")
+    if (!isValidUrlId(urlId)) {
+      setUrlIdError("영문 소문자와 숫자만 입력하세요.")
+      setIsLoading(false)
+      return
+    }
+    if (isUrlIdAvailable === false) {
+      setUrlIdError("이미 사용 중인 url id입니다.")
+      setIsLoading(false)
+      return
+    }
     const formData = new FormData(e.currentTarget)
     const name = formData.get("name") as string
     const email = formData.get("email") as string
     const password = formData.get("password") as string
     const blogName = formData.get("blogName") as string
-
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
@@ -31,9 +76,9 @@ export default function SignUp() {
           email,
           password,
           blogName,
+          urlId,
         }),
       })
-
       if (res.ok) {
         router.push("/auth/signin?registered=true")
       } else {
@@ -105,6 +150,40 @@ export default function SignUp() {
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-pink-500 focus:border-pink-500 focus:z-10 sm:text-sm"
                 placeholder="블로그명"
               />
+            </div>
+            <div>
+              <label htmlFor="urlId" className="sr-only">
+                URL ID
+              </label>
+              <div className="flex gap-2 mt-2">
+                <input
+                  id="urlId"
+                  name="urlId"
+                  type="text"
+                  required
+                  minLength={3}
+                  maxLength={20}
+                  pattern="[a-z0-9]+"
+                  value={urlId}
+                  onChange={e => {
+                    setUrlId(e.target.value)
+                    setIsUrlIdAvailable(null)
+                    setUrlIdError("")
+                  }}
+                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-pink-500 focus:border-pink-500 focus:z-10 sm:text-sm"
+                  placeholder="영문 소문자/숫자 (예: royalkim)"
+                />
+                <button
+                  type="button"
+                  onClick={checkUrlId}
+                  disabled={isUrlIdChecking || !urlId}
+                  className="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs"
+                >
+                  {isUrlIdChecking ? "확인 중..." : "중복확인"}
+                </button>
+              </div>
+              {urlIdError && <div className="text-xs text-red-500 mt-1">{urlIdError}</div>}
+              {isUrlIdAvailable && <div className="text-xs text-green-600 mt-1">사용 가능한 url id입니다.</div>}
             </div>
             <div>
               <label htmlFor="password" className="sr-only">

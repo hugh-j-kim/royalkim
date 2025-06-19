@@ -6,6 +6,7 @@ import { useContext } from "react"
 import { LanguageContext } from "@/components/Providers"
 import { ContentRenderer } from "@/components/ContentRenderer"
 import PostActions from "@/components/PostActions"
+import Link from "next/link"
 
 interface Post {
   id: string
@@ -14,7 +15,7 @@ interface Post {
   createdAt: string
   updatedAt: string
   viewCount: number
-  user: { name: string; email: string }
+  user: { name: string; email: string; urlId: string | null }
   description?: string | null
   category: { id: string; name: string } | null
   tags: { id: string; name: string }[]
@@ -27,12 +28,14 @@ const I18N: Record<string, { [key: string]: string }> = {
     createdAt: "작성일",
     updatedAt: "최근 수정일",
     viewCount: "조회수",
+    viewAuthorPosts: "작성자 글 목록",
   },
   en: {
     author: "Author",
     createdAt: "Created",
     updatedAt: "Last Updated",
     viewCount: "Views",
+    viewAuthorPosts: "Author's Posts",
   }
 }
 
@@ -62,6 +65,19 @@ export default function PostPageClient({ post }: { post: Post }) {
               </span>
             )}
           </div>
+          {post.user.urlId && (
+            <div className="mb-4">
+              <Link
+                href={`/${post.user.urlId}`}
+                className="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 hover:border-blue-300 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                {post.user.urlId} 글 목록
+              </Link>
+            </div>
+          )}
           <PostActions postId={post.id} canEdit={!!(session?.user?.email && post.user.email && session.user.email === post.user.email)} />
           <div className="prose prose-pink max-w-none mt-4">
             <ContentRenderer content={post.content} />

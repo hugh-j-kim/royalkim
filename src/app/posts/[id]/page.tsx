@@ -15,6 +15,7 @@ async function getPost(id: string) {
         select: {
           name: true,
           email: true,
+          urlId: true,
         },
       },
       category: {

@@ -33,6 +33,7 @@ interface CustomSession extends Session {
     email?: string | null
     image?: string | null
     role?: string | null
+    urlId?: string | null
   }
 }
 
@@ -219,7 +220,7 @@ export default function Home() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-pink-500 mb-4">{I18N[lang].blogTitle}</h1>
+          {/* <h1 className="text-4xl font-bold text-pink-500 mb-4">{I18N[lang].blogTitle}</h1> */}
           <p className="text-gray-600 mb-8">{I18N[lang].welcome}</p>
           <Link
             href="/auth/signin"
@@ -259,6 +260,14 @@ export default function Home() {
                 >
                   {I18N[lang].manageCategories}
                 </Link>
+                {session.user.urlId && (
+                  <Link
+                    href={`/${session.user.urlId}`}
+                    className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+                  >
+                    나의 글 목록
+                  </Link>
+                )}
                 {session.user.role === "ADMIN" && (
                   <Link
                     href="/admin"

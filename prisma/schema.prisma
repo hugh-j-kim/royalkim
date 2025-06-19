@@ -46,6 +46,7 @@ model User {
   approvedAt    DateTime? // 승인 일자 추가
   deletedAt     DateTime? // 삭제 일자(soft delete)
   blogTitle     String?   // 블로그명(회원가입 시 입력)
+  urlId         String?   @unique // 사용자 고유 url id (영문 소문자/숫자)
   accounts      Account[]
   sessions      Session[]
   posts         Post[]    // 사용자가 쓴 글 목록
