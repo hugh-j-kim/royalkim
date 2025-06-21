@@ -171,13 +171,13 @@ export default function SignUp() {
                     setUrlIdError("")
                   }}
                   className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-pink-500 focus:border-pink-500 focus:z-10 sm:text-sm"
-                  placeholder="영문 소문자/숫자 (예: royalkim)"
+                  placeholder="URL ID 영문 소문자/숫자 (예: royalkim)"
                 />
                 <button
                   type="button"
                   onClick={checkUrlId}
                   disabled={isUrlIdChecking || !urlId}
-                  className="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs"
+                  className="px-2 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs whitespace-nowrap"
                 >
                   {isUrlIdChecking ? "확인 중..." : "중복확인"}
                 </button>

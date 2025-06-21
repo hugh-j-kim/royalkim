@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
   title: "Royal Kim",
-  description: "Royal Kim's Blog",
+  description: "RoyalKim",
 };
 
 export default async function RootLayout({
