@@ -1,10 +1,11 @@
 'use client'
 
-import { SessionProvider, useSession } from "next-auth/react"
+import { SessionProvider } from "next-auth/react"
 import Logo from "@/components/Logo"
 import React, { useEffect, useState, createContext, useContext } from "react"
 import { translations } from "@/i18n/translations"
 import Link from "next/link"
+import { Session } from "next-auth"
 
 export const LanguageContext = createContext({
   lang: 'ko',
@@ -19,8 +20,7 @@ const LANGUAGES = [
 
 export const useLanguage = () => useContext(LanguageContext);
 
-function Header() {
-  const { data: session } = useSession()
+function Header({ session }: { session: Session | null }) {
   const { lang } = useLanguage()
   const blogTitle = session?.user?.blogTitle;
   const urlId = session?.user?.urlId;
@@ -70,12 +70,14 @@ export default function Providers({
   session,
 }: {
   children: React.ReactNode
-  session: any
+  session: Session | null
 }) {
   const [lang, setLang] = useState('ko')
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const savedLang = typeof window !== 'undefined' ? localStorage.getItem('lang') : null
+    setMounted(true)
+    const savedLang = localStorage.getItem('lang')
     if (savedLang && LANGUAGES.some(l => l.code === savedLang)) {
       setLang(savedLang)
     }
@@ -88,11 +90,14 @@ export default function Providers({
   //   }
   // }
 
+  // Use the mounted state to ensure consistent rendering
+  const currentLang = mounted ? lang : 'ko'
+
   return (
     <SessionProvider session={session}>
-      <LanguageContext.Provider value={{ lang, setLang, t: (key: string) => translations[lang]?.[key] || key }}>
+      <LanguageContext.Provider value={{ lang: currentLang, setLang, t: (key: string) => translations[currentLang]?.[key] || key }}>
         <div className="bg-pink-50 min-h-screen flex flex-col">
-          <Header />
+          <Header session={session} />
           <main className="flex-1 flex flex-col w-full mt-16 md:mt-24">
             {children}
           </main>
