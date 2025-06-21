@@ -24,7 +24,7 @@ function Header() {
   const { lang } = useLanguage()
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-pink-50/80 backdrop-blur-sm z-50 border-b border-pink-100">
+    <header className="fixed top-0 left-0 right-0 bg-pink-50/80 backdrop-blur-sm z-50 sm:border-b border-pink-100">
       <div className="max-w-5xl mx-auto px-10 py-6">
         <div className="relative flex items-center">
           {/* 관리자 버튼 - 왼쪽에 고정 */}
