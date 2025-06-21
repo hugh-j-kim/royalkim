@@ -173,19 +173,19 @@ export default async function UserBlogPage({
               <>
                 <Link
                   href="/posts/new"
-                  className="px-4 py-2 bg-pink-500 text-white rounded-md hover:bg-pink-600 transition-colors"
+                  className="px-3 md:px-4 py-2 bg-pink-500 text-white rounded-md hover:bg-pink-600 transition-colors whitespace-nowrap"
                 >
                   새 글 작성
                 </Link>
                 <Link
                   href="/admin/categories"
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                  className="px-3 md:px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors whitespace-nowrap"
                 >
                   카테고리 관리
                 </Link>
                 <Link
                   href="/dashboard"
-                  className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                  className="px-3 md:px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors whitespace-nowrap"
                 >
                   대시보드
                 </Link>
