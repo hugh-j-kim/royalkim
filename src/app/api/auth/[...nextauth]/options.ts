@@ -1,6 +1,8 @@
 import CredentialsProvider from "next-auth/providers/credentials"
 import { compare } from "bcryptjs"
 import prisma from "@/lib/prisma"
+import type { JWT } from "next-auth/jwt"
+import type { Session as NextAuthSession, User as NextAuthUser } from "next-auth"
 
 // Session 타입 확장 필요시 아래와 같이 사용하세요.
 // declare module "next-auth" {
@@ -55,28 +57,31 @@ export const authOptions: any = {
           email: user.email,
           image: user.image,
           role: user.role,
-          blogTitle: user.blogTitle
+          blogTitle: user.blogTitle,
+          urlId: user.urlId,
         }
       }
     })
   ],
   callbacks: {
-    async jwt({ token, user }: any) {
+    async jwt({ token, user }: { token: JWT; user?: NextAuthUser }) {
       if (user) {
-        token.id = user.id
-        token.role = user.role
-        token.blogTitle = user.blogTitle
+        token.id = user.id;
+        token.role = user.role;
+        token.urlId = user.urlId;
+        token.blogTitle = user.blogTitle;
       }
-      return token
+      return token;
     },
-    async session({ session, token }: any) {
+    async session({ session, token }: { session: NextAuthSession; token: JWT }) {
       if (token) {
-        session.user.id = token.id as string
-        session.user.role = token.role as string
-        session.user.blogTitle = token.blogTitle as string
+        session.user.id = token.id as string;
+        session.user.role = token.role as string;
+        session.user.urlId = token.urlId as string;
+        session.user.blogTitle = token.blogTitle as string;
       }
-      return session
-    }
+      return session;
+    },
   },
   pages: {
     signIn: "/auth/signin",

@@ -4,7 +4,6 @@ import { useContext } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Session } from "next-auth"
 import { LanguageContext } from "@/components/Providers"
 import { useCategories } from "@/hooks/useCategories"
 
@@ -82,7 +81,7 @@ function findCategoryById(categories: Category[], id: string | null): Category |
 
 export default function CategoriesPage() {
   const { lang } = useContext(LanguageContext)
-  const { status } = useSession() as { data: (Session & { user: { role?: string } }) | null, status: string }
+  const { data: session, status } = useSession()
   const router = useRouter()
   const { categories, isLoading, error, deleteCategory } = useCategories()
 
@@ -195,7 +194,7 @@ export default function CategoriesPage() {
           <h1 className="text-2xl sm:text-3xl font-bold text-pink-500">{I18N[lang].categories}</h1>
           <div className="flex gap-2">
             <Link
-              href="/"
+              href={session?.user?.urlId ? `/${session.user.urlId}` : "/"}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
             >
               {I18N[lang].home}

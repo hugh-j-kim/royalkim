@@ -72,7 +72,7 @@ export default function CategorySelect({ value, onChange, placeholder }: Categor
         id="category"
         value={value || ""}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm select-arrow py-2 px-3"
       >
         <option value="">{placeholder || t("selectCategory")}</option>
         {renderCategoryOptions(categories)}

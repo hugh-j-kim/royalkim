@@ -43,7 +43,7 @@ export default function CategoryFilter({ categories, selectedCategoryId }: Categ
       <select
         value={selectedCategoryId}
         onChange={(e) => handleCategoryChange(e.target.value)}
-        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 select-arrow"
       >
         <option value="">모든 카테고리</option>
         {categories.map((category) => (

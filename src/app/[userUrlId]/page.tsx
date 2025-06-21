@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation"
 import prisma from "@/lib/prisma"
 import Link from "next/link"
-import { getServerSession } from "next-auth/next"
+import { getServerSession, Session } from "next-auth"
 import { authOptions } from "@/app/api/auth/[...nextauth]/options"
-import { Session } from "next-auth"
 import CategoryFilter from "@/components/CategoryFilter"
+import LogoutButton from "@/components/LogoutButton"
 
 // 카드 상단 미디어 추출 함수 (메인 페이지와 동일)
 function getFirstMedia(content: string) {
@@ -52,17 +52,6 @@ function getFirstMedia(content: string) {
   );
 }
 
-interface CustomSession extends Session {
-  user: {
-    id: string
-    name?: string | null
-    email?: string | null
-    image?: string | null
-    role?: string | null
-    urlId?: string | null
-  }
-}
-
 export default async function UserBlogPage({ 
   params,
   searchParams 
@@ -75,7 +64,7 @@ export default async function UserBlogPage({
     offset?: string
   }
 }) {
-  const session = await getServerSession(authOptions) as CustomSession | null
+  const session: Session | null = await getServerSession(authOptions)
   const user = await prisma.user.findFirst({
     where: { urlId: params.userUrlId } as any,
     select: {
@@ -134,19 +123,43 @@ export default async function UserBlogPage({
 
   // 카테고리 목록 가져오기
   const categories = await prisma.category.findMany({
+    where: {
+      userId: user.id,
+    },
     orderBy: { name: 'asc' },
     select: { id: true, name: true },
   })
-
-  const blogTitle = user.blogTitle || `${user.name}의 블로그`
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* 헤더 */}
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-gray-900">{blogTitle}</h1>
+        <div className="flex flex-wrap justify-between items-center mb-12 gap-6">
+          <div className="flex-1">
+            <div className="inline-block relative">
+              <div className="absolute -inset-1 bg-gradient-to-r from-pink-400 via-purple-500 to-indigo-600 rounded-lg blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+              <div className="relative">
+                <h1 className="text-4xl font-light text-gray-800 mb-3">
+                  {user.blogTitle ? (
+                    <span className="bg-gradient-to-r from-pink-400 via-purple-500 to-indigo-600 bg-clip-text text-transparent">
+                      {user.blogTitle}
+                    </span>
+                  ) : (
+                    <span className="text-gray-700">
+                      {user.name}
+                      <span className="text-pink-500 font-normal ml-2">'s Blog</span>
+                    </span>
+                  )}
+                </h1>
+                <div className="h-0.5 bg-gradient-to-r from-pink-400 via-purple-500 to-indigo-600 rounded-full transform origin-left transition-all duration-500 hover:scale-x-110"></div>
+              </div>
+            </div>
+            <p className="text-gray-500 text-sm mt-2 font-light">
+              {user.blogTitle ? `${user.name}의 개인 블로그` : '개인 블로그'}
+            </p>
+          </div>
+
+          <div className="flex items-center space-x-2">
             {!session && (
               <Link
                 href="/auth/signin"
@@ -155,23 +168,34 @@ export default async function UserBlogPage({
                 로그인
               </Link>
             )}
+
+            {session?.user?.id === user.id && (
+              <>
+                <Link
+                  href="/posts/new"
+                  className="px-4 py-2 bg-pink-500 text-white rounded-md hover:bg-pink-600 transition-colors"
+                >
+                  새 글 작성
+                </Link>
+                <Link
+                  href="/admin/categories"
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                >
+                  카테고리 관리
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                >
+                  대시보드
+                </Link>
+              </>
+            )}
+
+            {session && (
+              <LogoutButton />
+            )}
           </div>
-          {session?.user?.id === user.id && (
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/posts/new"
-                className="px-4 py-2 bg-pink-500 text-white rounded-md hover:bg-pink-600 transition-colors"
-              >
-                새 글 작성
-              </Link>
-              <Link
-                href="/dashboard"
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-              >
-                대시보드
-              </Link>
-            </div>
-          )}
         </div>
 
         {/* 검색 및 필터링 UI */}
@@ -190,7 +214,7 @@ export default async function UserBlogPage({
               <select
                 name="searchField"
                 defaultValue={searchField}
-                className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 select-arrow"
               >
                 <option value="title">제목</option>
                 <option value="content">내용</option>

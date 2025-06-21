@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { signIn } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
@@ -10,7 +10,16 @@ export default function SignIn() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const [successMessage, setSuccessMessage] = useState("")
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    const message = searchParams.get('message')
+    if (message === 'profile_updated') {
+      setSuccessMessage('프로필이 성공적으로 업데이트되었습니다. 다시 로그인해주세요.')
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -46,6 +55,11 @@ export default function SignIn() {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
             <div className="text-red-500 text-sm text-center">{error}</div>
+          )}
+          {successMessage && (
+            <div className="text-green-600 text-sm text-center bg-green-50 p-3 rounded-md">
+              {successMessage}
+            </div>
           )}
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
