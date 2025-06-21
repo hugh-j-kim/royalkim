@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma"
 import Link from "next/link"
 import { Session } from "next-auth"
 import LogoutButton from "@/components/LogoutButton"
+import UserLink from "@/components/UserLink"
 
 // 카드 상단 미디어 추출 함수
 function getFirstMedia(content: string) {
@@ -201,9 +202,13 @@ export default async function Home({
                   <p className="text-gray-500 text-sm line-clamp-1 overflow-hidden text-ellipsis whitespace-nowrap">
                     {post.content.replace(/<[^>]*>/g, '')}
                   </p>
-                  <p className="text-right text-xs text-gray-400 mt-2">
-                    by {post.user.name}
-                  </p>
+                  <div className="text-right text-xs text-gray-400 mt-2">
+                    {post.user.urlId && post.user.name ? (
+                      <UserLink urlId={post.user.urlId} name={post.user.name} />
+                    ) : (
+                      <span>by {post.user.name}</span>
+                    )}
+                  </div>
                 </div>
               </Link>
             ))
