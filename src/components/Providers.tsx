@@ -25,7 +25,7 @@ function Header() {
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-pink-50/80 backdrop-blur-sm z-50 shadow-md">
-      <div className="max-w-5xl mx-auto px-10 py-8">
+      <div className="max-w-5xl mx-auto px-4 md:px-10 py-4 md:py-8">
         <div className="relative flex items-center">
           {/* 관리자 버튼 - 왼쪽에 고정 */}
           {session?.user?.role === 'ADMIN' && (
@@ -87,7 +87,7 @@ export default function Providers({
       <LanguageContext.Provider value={{ lang, setLang, t: (key: string) => translations[lang]?.[key] || key }}>
         <div className="bg-pink-50 min-h-screen flex flex-col">
           <Header />
-          <main className="flex-1 flex flex-col w-full mt-[64px]">
+          <main className="flex-1 flex flex-col w-full mt-[64px] md:mt-[96px]">
             {children}
           </main>
         </div>

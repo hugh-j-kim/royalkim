@@ -8,7 +8,7 @@ interface LogoProps {
 
 export default function Logo({ blogTitle = "Royal Kim's Blog" }: LogoProps) {
   return (
-    <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-pink-600 hover:text-pink-700 transition-colors">
+    <Link href="/" className="flex items-center gap-2 text-xl md:text-2xl font-bold text-pink-600 hover:text-pink-700 transition-colors whitespace-nowrap">
       <div className="relative w-8 h-8 rounded-full overflow-hidden">
         <Image
           src="/dog-wink.png"
