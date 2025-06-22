@@ -16,7 +16,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, email, blogTitle } = body;
+    const { name, email, blogTitle, image } = body;
 
     // 필수 필드 검증
     if (!name || !email) {
@@ -46,7 +46,8 @@ export async function PUT(request: NextRequest) {
       data: {
         name,
         email,
-        blogTitle: blogTitle || null
+        blogTitle: blogTitle || null,
+        image: image || null
       }
     });
 
@@ -58,7 +59,8 @@ export async function PUT(request: NextRequest) {
         email: updatedUser.email,
         blogTitle: updatedUser.blogTitle,
         urlId: updatedUser.urlId,
-        role: updatedUser.role
+        role: updatedUser.role,
+        image: updatedUser.image
       }
     });
 

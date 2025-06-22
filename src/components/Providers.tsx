@@ -24,6 +24,7 @@ function Header({ session }: { session: Session | null }) {
   const { lang } = useLanguage()
   const blogTitle = session?.user?.blogTitle;
   const urlId = session?.user?.urlId;
+  const userImage = session?.user?.image;
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-pink-50/80 backdrop-blur-sm z-50 shadow-md">
@@ -33,8 +34,29 @@ function Header({ session }: { session: Session | null }) {
           {/* Left side: Home and Admin buttons */}
           <div className="flex flex-1 justify-start">
             <div className="flex items-center space-x-1 md:space-x-2">
-              <Link href="/" className="p-2 rounded-full text-gray-600 hover:bg-pink-100 transition-colors" aria-label="Home">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <Link 
+                href="/" 
+                className="relative p-2 rounded-full text-gray-600 hover:text-pink-600 hover:bg-pink-100/50 transition-all duration-500 group" 
+                aria-label="Home"
+                style={{
+                  animation: 'glow 4s ease-in-out infinite alternate'
+                }}
+              >
+                {/* Glow effect */}
+                <div 
+                  className="absolute inset-0 rounded-full bg-gradient-to-r from-pink-300/30 via-purple-300/20 to-pink-300/30 blur-md opacity-0 group-hover:opacity-100 transition-all duration-500"
+                  style={{
+                    animation: 'pulse-glow 2s ease-in-out infinite'
+                  }}
+                ></div>
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className="relative h-5 w-5 md:h-6 md:w-6 transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-lg" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor" 
+                  strokeWidth="2"
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
               </Link>
@@ -54,7 +76,7 @@ function Header({ session }: { session: Session | null }) {
           
           {/* Center Logo */}
           <div className="shrink-0">
-            <Logo blogTitle={blogTitle} urlId={urlId} />
+            <Logo blogTitle={blogTitle} urlId={urlId} userImage={userImage} />
           </div>
           
           {/* Right side for balance */}

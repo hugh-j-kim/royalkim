@@ -179,3 +179,28 @@
     appearance: none;
   }
 }
+
+/* Home icon glow animation */
+@keyframes glow {
+  0% {
+    box-shadow: 0 0 5px rgba(236, 72, 153, 0.3), 0 0 10px rgba(236, 72, 153, 0.2), 0 0 15px rgba(236, 72, 153, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(236, 72, 153, 0.4), 0 0 20px rgba(236, 72, 153, 0.3), 0 0 30px rgba(236, 72, 153, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(236, 72, 153, 0.3), 0 0 10px rgba(236, 72, 153, 0.2), 0 0 15px rgba(236, 72, 153, 0.1);
+  }
+}
+
+/* Subtle pulse animation for the glow effect */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}

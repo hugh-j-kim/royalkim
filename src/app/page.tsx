@@ -91,7 +91,7 @@ export default async function Home({
       createdAt: true,
       viewCount: true,
       category: { select: { name: true } },
-      user: { select: { name: true, urlId: true } }
+      user: { select: { name: true, urlId: true, image: true } }
     },
   })
 
@@ -204,7 +204,7 @@ export default async function Home({
                   </p>
                   <div className="text-right text-xs text-gray-400 mt-2">
                     {post.user.urlId && post.user.name ? (
-                      <UserLink urlId={post.user.urlId} name={post.user.name} />
+                      <UserLink urlId={post.user.urlId} name={post.user.name} image={post.user.image} />
                     ) : (
                       <span>by {post.user.name}</span>
                     )}

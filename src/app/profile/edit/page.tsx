@@ -1,16 +1,50 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
+import Image from 'next/image';
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { initializeApp } from "firebase/app";
+
+// Firebase 설정
+const firebaseConfig = {
+  apiKey: "AIzaSyApThOThn_cT2heKV_W3JJ4o71-c4yWofw",
+  authDomain: "royalkim.firebaseapp.com",
+  projectId: "royalkim",
+  storageBucket: "royalkim.firebasestorage.app",
+  messagingSenderId: "1052940584501",
+  appId: "1:1052940584501:web:96da5ff02c3ad14785537c",
+  measurementId: "G-1929TKXLQP"
+}
+
+const app = initializeApp(firebaseConfig)
+const storage = getStorage(app)
+
+// 이미지 파일 유효성 검사 함수
+function isValidImageFile(file: File) {
+  const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+  const maxSize = 5 * 1024 * 1024 // 5MB
+  
+  if (!validTypes.includes(file.type)) {
+    return { isValid: false, error: '지원되는 이미지 형식: JPG, PNG, GIF, WebP' }
+  }
+  
+  if (file.size > maxSize) {
+    return { isValid: false, error: '파일 크기는 5MB 이하여야 합니다' }
+  }
+  
+  return { isValid: true, error: '' }
+}
 
 export default function EditProfilePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -24,6 +58,10 @@ export default function EditProfilePage() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showPasswordSection, setShowPasswordSection] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageError, setImageError] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -39,6 +77,11 @@ export default function EditProfilePage() {
       email: session.user.email || '',
       blogTitle: session.user.blogTitle || ''
     });
+
+    // 현재 사용자 이미지 설정
+    if (session.user.image) {
+      setImagePreview(session.user.image);
+    }
   }, [session, status, router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,11 +94,60 @@ export default function EditProfilePage() {
     setPasswordData(prev => ({ ...prev, [name]: value }));
   };
 
+  // 이미지 선택 처리
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const validation = isValidImageFile(file)
+    if (!validation.isValid) {
+      setImageError(validation.error)
+      setSelectedImage(null)
+      setImagePreview(null)
+      return
+    }
+
+    setImageError("")
+    setSelectedImage(file)
+    
+    // 미리보기 생성
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  // 이미지 업로드
+  const uploadImage = async (file: File): Promise<string> => {
+    const storageRef = ref(storage, `logos/${Date.now()}_${file.name}`)
+    await uploadBytes(storageRef, file)
+    return await getDownloadURL(storageRef)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setImageError("");
 
     try {
+      let imageUrl = null;
+      
+      // 이미지 업로드 처리
+      if (selectedImage) {
+        setIsUploading(true);
+        try {
+          imageUrl = await uploadImage(selectedImage);
+        } catch (uploadError) {
+          setImageError("이미지 업로드에 실패했습니다.");
+          setIsLoading(false);
+          setIsUploading(false);
+          return;
+        } finally {
+          setIsUploading(false);
+        }
+      }
+
       const response = await fetch('/api/profile/update', {
         method: 'PUT',
         headers: {
@@ -63,7 +155,10 @@ export default function EditProfilePage() {
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache'
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          image: imageUrl
+        }),
       });
 
       if (response.ok) {
@@ -236,6 +331,71 @@ export default function EditProfilePage() {
               />
             </div>
 
+            {/* 프로필 이미지 업로드 섹션 */}
+            <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                프로필 이미지
+              </label>
+              <div className="space-y-3">
+                {/* 이미지 미리보기 */}
+                {imagePreview && (
+                  <div className="flex justify-center">
+                    <div className="relative">
+                      <img
+                        src={imagePreview}
+                        alt="프로필 미리보기"
+                        className="w-24 h-24 rounded-full object-cover border-2 border-pink-300 shadow-md"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedImage(null)
+                          setImagePreview(null)
+                          if (fileInputRef.current) {
+                            fileInputRef.current.value = ''
+                          }
+                        }}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                )}
+                
+                {/* 파일 선택 버튼 */}
+                <div className="flex justify-center">
+                  <Button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-4 py-2 bg-pink-500 text-white rounded-md hover:bg-pink-600 transition-colors text-sm"
+                  >
+                    {imagePreview ? '이미지 변경' : '이미지 선택'}
+                  </Button>
+                </div>
+                
+                {/* 숨겨진 파일 입력 */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                  onChange={handleImageSelect}
+                  className="hidden"
+                />
+                
+                {/* 파일 제한 정보 */}
+                <div className="text-xs text-gray-500 text-center">
+                  <p>지원 형식: JPG, PNG, GIF, WebP</p>
+                  <p>최대 파일 크기: 5MB</p>
+                </div>
+                
+                {/* 에러 메시지 */}
+                {imageError && (
+                  <div className="text-xs text-red-500 text-center">{imageError}</div>
+                )}
+              </div>
+            </div>
+
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2">
               <Button
                 type="button"
@@ -246,10 +406,10 @@ export default function EditProfilePage() {
               </Button>
               <Button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || isUploading}
                 className="flex-1 bg-pink-500 hover:bg-pink-600 text-base py-2 sm:py-2"
               >
-                {isLoading ? '저장 중...' : '저장'}
+                {isLoading || isUploading ? (isUploading ? '이미지 업로드 중...' : '저장 중...') : '저장'}
               </Button>
             </div>
           </form>
