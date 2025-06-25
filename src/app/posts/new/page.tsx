@@ -8,7 +8,7 @@ import { useContext } from "react"
 import { LanguageContext } from "@/components/Providers"
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage"
 import { initializeApp } from "firebase/app"
-import CategorySelect from "@/components/CategorySelect"
+import CategoryMultiSelect from "@/components/CategoryMultiSelect"
 
 const I18N: Record<string, { [key: string]: string }> = {
   ko: {
@@ -56,7 +56,7 @@ export default function NewPostPage() {
   const [content, setContent] = React.useState("")
   const [description, setDescription] = React.useState("")
   const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [categoryId, setCategoryId] = useState<string>("")
+  const [categoryIds, setCategoryIds] = useState<string[]>([])
   const [published, setPublished] = useState(false)
 
   // 로그인하지 않은 사용자는 메인 페이지로 리다이렉트
@@ -96,7 +96,7 @@ export default function NewPostPage() {
           description,
           content: processedContent,
           published,
-          categoryId: categoryId || null,
+          categoryIds: categoryIds,
         }),
       })
 
@@ -168,7 +168,11 @@ export default function NewPostPage() {
               maxLength={150}
             />
           </div>
-          <CategorySelect value={categoryId} onChange={setCategoryId} />
+          <CategoryMultiSelect 
+            value={categoryIds} 
+            onChange={setCategoryIds} 
+            placeholder="카테고리를 선택하세요"
+          />
           <div>
             <label
               htmlFor="content"

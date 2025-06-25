@@ -91,11 +91,36 @@ export default async function Home({
       createdAt: true,
       viewCount: true,
       category: { select: { name: true } },
+      categoryIds: true,
       user: { select: { name: true, urlId: true, image: true } }
     },
   })
 
   const total = await prisma.post.count({ where: whereCondition })
+
+  const allCategoryIds = posts
+    .filter(post => post.categoryIds && post.categoryIds.length > 0)
+    .flatMap(post => post.categoryIds);
+  
+  const uniqueCategoryIds = [...new Set(allCategoryIds)];
+  
+  const postCategories = await prisma.category.findMany({
+    where: {
+      id: {
+        in: uniqueCategoryIds
+      }
+    },
+    select: { id: true, name: true },
+  });
+
+  const categoryMap = new Map(postCategories.map(cat => [cat.id, cat.name]));
+
+  const postsWithCategories = posts.map(post => ({
+    ...post,
+    categoryNames: post.categoryIds 
+      ? post.categoryIds.map(id => categoryMap.get(id)).filter(Boolean)
+      : []
+  }));
 
   return (
     <div className="min-h-screen bg-white">
@@ -165,14 +190,14 @@ export default async function Home({
 
         {/* 포스트 목록 */}
         <div className="grid w-full grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {posts.length === 0 ? (
+          {postsWithCategories.length === 0 ? (
             <div className="col-span-full text-center py-16">
               <p className="text-xl text-gray-500">
                 {searchQuery ? "검색 결과가 없습니다." : "아직 작성된 글이 없습니다."}
               </p>
             </div>
           ) : (
-            posts.map((post) => (
+            postsWithCategories.map((post) => (
               <Link
                 key={post.id}
                 href={`/posts/${post.id}`}
@@ -185,20 +210,53 @@ export default async function Home({
                   <h2 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
                     {post.title}
                   </h2>
-                  <div className="mb-2 flex items-center justify-between">
-                    {post.category ? (
+                  
+                  {post.categoryNames && post.categoryNames.length > 0 && (
+                    <div className="mb-2 flex items-center justify-between">
+                      <div className="flex flex-wrap gap-1">
+                        {post.categoryNames.map((categoryName, index) => (
+                          <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800">
+                            {categoryName}
+                          </span>
+                        ))}
+                      </div>
+                      <span className="flex items-center text-xs text-gray-500 gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        {post.viewCount}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {(!post.categoryNames || post.categoryNames.length === 0) && post.category && (
+                    <div className="mb-2 flex items-center justify-between">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800">
                         {post.category.name}
                       </span>
-                    ) : <div />}
-                    <span className="flex items-center text-xs text-gray-500 gap-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                      {post.viewCount}
-                    </span>
-                  </div>
+                      <span className="flex items-center text-xs text-gray-500 gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        {post.viewCount}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {(!post.categoryNames || post.categoryNames.length === 0) && !post.category && (
+                    <div className="mb-2 flex items-center justify-end">
+                      <span className="flex items-center text-xs text-gray-500 gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        {post.viewCount}
+                      </span>
+                    </div>
+                  )}
+                  
                   <p className="text-gray-500 text-sm line-clamp-1 overflow-hidden text-ellipsis whitespace-nowrap">
                     {post.content.replace(/<[^>]*>/g, '')}
                   </p>

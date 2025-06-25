@@ -6,7 +6,7 @@ import { Editor } from "@tinymce/tinymce-react"
 import { LanguageContext } from "@/components/Providers"
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage"
 import { initializeApp } from "firebase/app"
-import CategorySelect from "@/components/CategorySelect"
+import CategoryMultiSelect from "@/components/CategoryMultiSelect"
 
 interface Post {
   id: string
@@ -16,7 +16,7 @@ interface Post {
   updatedAt?: string | Date
   viewCount?: number
   description?: string | null
-  categoryId?: string | null
+  categoryIds?: string[]
   published: boolean
 }
 
@@ -84,7 +84,7 @@ export function PostEditor({ post, onSubmit, isSubmitting: externalIsSubmitting 
   const [title, setTitle] = useState(post.title)
   const [description, setDescription] = useState(post.description || "")
   const [internalIsSubmitting, setInternalIsSubmitting] = useState(false)
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(post.categoryId || "")
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(post.categoryIds || [])
   const editorRef = useRef<any>(null)
   const [editorContent, setEditorContent] = useState(post.content)
   const [published, setPublished] = useState(post.published)
@@ -136,7 +136,7 @@ export function PostEditor({ post, onSubmit, isSubmitting: externalIsSubmitting 
         title,
         description,
         content: stripYoutubeDiv(content),
-        categoryId: selectedCategoryId || null,
+        categoryIds: selectedCategoryIds,
         published,
       })
     } else {
@@ -159,7 +159,7 @@ export function PostEditor({ post, onSubmit, isSubmitting: externalIsSubmitting 
             title,
             description,
             content: stripYoutubeDiv(content),
-            categoryId: selectedCategoryId || null,
+            categoryIds: selectedCategoryIds,
             published,
           }),
         })
@@ -216,7 +216,14 @@ export function PostEditor({ post, onSubmit, isSubmitting: externalIsSubmitting 
             maxLength={150}
           />
         </div>
-        <CategorySelect value={selectedCategoryId} onChange={setSelectedCategoryId} />
+        
+        {/* 다중 카테고리 선택 */}
+        <CategoryMultiSelect 
+          value={selectedCategoryIds} 
+          onChange={setSelectedCategoryIds} 
+          placeholder="카테고리를 선택하세요"
+        />
+
         <div className="flex items-center gap-2 mb-4">
           <input
             type="checkbox"

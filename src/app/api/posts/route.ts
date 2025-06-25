@@ -19,6 +19,7 @@ export async function GET(request: Request) {
     const search = searchParams.get("search")?.trim() || ""
     const searchField = searchParams.get("searchField") || "title"
     const categoryId = searchParams.get("categoryId") || ""
+    const categoryIds = searchParams.get("categoryIds") || ""
 
     // where 조건 생성
     const where: any = {
@@ -32,8 +33,20 @@ export async function GET(request: Request) {
         where.title = { contains: search, mode: "insensitive" }
       }
     }
-    if (categoryId) {
-      where.categoryId = categoryId
+    
+    // 카테고리 필터링: categoryIds가 있으면 그것을 우선 사용, 없으면 categoryId 사용
+    if (categoryIds) {
+      const categoryIdsArray = categoryIds.split(',').map(id => id.trim()).filter(id => id);
+      if (categoryIdsArray.length > 0) {
+        where.categoryIds = {
+          hasSome: categoryIdsArray
+        }
+      }
+    } else if (categoryId) {
+      where.OR = [
+        { categoryId: categoryId },
+        { categoryIds: { has: categoryId } }
+      ]
     }
 
     const [posts, total] = await Promise.all([
@@ -77,7 +90,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const { title, description, content, categoryId } = await request.json()
+    const { title, description, content, categoryIds } = await request.json()
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
@@ -97,7 +110,7 @@ export async function POST(request: Request) {
         content,
         userId: user.id,
         published: true,
-        categoryId: categoryId || null,
+        categoryIds: categoryIds || [], // 다중 카테고리만 사용
       },
       include: {
         user: {

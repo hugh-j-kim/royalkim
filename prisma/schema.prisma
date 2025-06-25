@@ -13,12 +13,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -34,25 +34,25 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String          @id @default(cuid())
   name          String?
-  email         String?   @unique
+  email         String?         @unique
+  password      String?
   emailVerified DateTime?
   image         String?
-  password      String?
-  role          String    @default("PENDING") // ADMIN, PENDING, USER
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  approvedAt    DateTime? // 승인 일자 추가
-  deletedAt     DateTime? // 삭제 일자(soft delete)
-  blogTitle     String?   // 블로그명(회원가입 시 입력)
-  urlId         String?   @unique // 사용자 고유 url id (영문 소문자/숫자)
+  approvedAt    DateTime?
+  createdAt     DateTime        @default(now())
+  role          String          @default("PENDING")
+  updatedAt     DateTime        @updatedAt
+  deletedAt     DateTime?
+  blogTitle     String?
+  urlId         String?         @unique
   accounts      Account[]
-  sessions      Session[]
-  posts         Post[]    // 사용자가 쓴 글 목록
   categories    Category[]
-  series        Series[]
   comments      Comment[]
+  posts         Post[]
+  series        Series[]
+  sessions      Session[]
   deleteLogs    UserDeleteLog[] @relation("UserDeleteLogs")
 }
 
@@ -67,77 +67,78 @@ model VerificationToken {
 model Post {
   id          String    @id @default(cuid())
   title       String
-  description String?   @db.Text
-  content     String    @db.Text
+  content     String
   published   Boolean   @default(false)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   viewCount   Int       @default(0)
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  description String?
   categoryId  String?
-  category    Category? @relation(fields: [categoryId], references: [id])
   seriesId    String?
-  series      Series?   @relation(fields: [seriesId], references: [id])
   seriesOrder Int?
-  tags        Tag[]
+  userId      String
+  categoryIds String[]  @default([])
   comments    Comment[]
+  category    Category? @relation(fields: [categoryId], references: [id])
+  series      Series?   @relation(fields: [seriesId], references: [id])
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tags        Tag[]     @relation("PostToTag")
 }
 
 model UserDeleteLog {
-  id         String   @id @default(cuid())
-  userId     String
-  email      String?
-  name       String?
-  deletedBy  String   // 삭제를 실행한 관리자 ID
-  deletedAt  DateTime @default(now())
-  reason     String?
-  roleAtDelete String? // 삭제 당시의 role (nullable)
-  user       User     @relation("UserDeleteLogs", fields: [userId], references: [id])
+  id           String   @id @default(cuid())
+  userId       String
+  email        String?
+  name         String?
+  deletedBy    String
+  deletedAt    DateTime @default(now())
+  reason       String?
+  roleAtDelete String?
+  user         User     @relation("UserDeleteLogs", fields: [userId], references: [id])
 }
 
 model Series {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   title       String
-  description String?   @db.Text
-  isPublic    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  description String?
+  isPublic    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   posts       Post[]
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Tag {
   id        String   @id @default(cuid())
   name      String   @unique
-  posts     Post[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  posts     Post[]   @relation("PostToTag")
 }
 
 model Comment {
   id        String   @id @default(cuid())
-  content   String   @db.Text
+  content   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   postId    String
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   userId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Category {
-  id            String    @id @default(cuid())
+  id            String     @id @default(cuid())
   name          String
-  description   String?   @db.Text
-  isPublic      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  description   String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
   userId        String
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isPublic      Boolean    @default(true)
   parentId      String?
-  parent        Category? @relation("CategoryToCategory", fields: [parentId], references: [id])
+  parent        Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
   subcategories Category[] @relation("CategoryToCategory")
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   posts         Post[]
 }

@@ -61,6 +61,7 @@ export default async function UserBlogPage({
     search?: string
     searchField?: string
     categoryId?: string
+    categoryIds?: string
     offset?: string
   }
 }) {
@@ -80,6 +81,7 @@ export default async function UserBlogPage({
   const searchQuery = searchParams.search || ''
   const searchField = (searchParams.searchField as 'title' | 'content') || 'title'
   const categoryId = searchParams.categoryId || ''
+  const categoryIds = searchParams.categoryIds || ''
   const offset = parseInt(searchParams.offset || '0')
 
   // 포스트 쿼리 조건
@@ -96,8 +98,19 @@ export default async function UserBlogPage({
     }
   }
 
-  if (categoryId) {
-    whereCondition.categoryId = categoryId
+  // 카테고리 필터링: categoryIds가 있으면 그것을 우선 사용, 없으면 categoryId 사용
+  if (categoryIds) {
+    const categoryIdsArray = categoryIds.split(',').map(id => id.trim()).filter(id => id);
+    if (categoryIdsArray.length > 0) {
+      whereCondition.categoryIds = {
+        hasSome: categoryIdsArray
+      }
+    }
+  } else if (categoryId) {
+    whereCondition.OR = [
+      { categoryId: categoryId },
+      { categoryIds: { has: categoryId } }
+    ]
   }
 
   // 포스트 가져오기
@@ -113,6 +126,7 @@ export default async function UserBlogPage({
       viewCount: true,
       content: true,
       category: { select: { name: true } },
+      categoryIds: true,
     },
   })
 
@@ -121,14 +135,54 @@ export default async function UserBlogPage({
     where: whereCondition,
   })
 
-  // 카테고리 목록 가져오기
-  const categories = await prisma.category.findMany({
+  // 카테고리 목록 가져오기 (계층 구조)
+  const categoriesResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/categories/user/${user.id}`, {
+    cache: 'no-store'
+  });
+  
+  let categories: any[] = [];
+  if (categoriesResponse.ok) {
+    categories = await categoriesResponse.json();
+  } else {
+    // API 호출이 실패한 경우 기존 방식으로 가져오기
+    categories = await prisma.category.findMany({
+      where: {
+        userId: user.id,
+      },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true },
+    });
+  }
+
+  // 선택된 카테고리 ID들 파싱
+  const selectedCategoryIds = categoryIds ? categoryIds.split(',').map(id => id.trim()).filter(id => id) : [];
+
+  // 포스트의 categoryIds에 해당하는 카테고리 정보를 가져오기
+  const allCategoryIds = posts
+    .filter(post => post.categoryIds && post.categoryIds.length > 0)
+    .flatMap(post => post.categoryIds);
+  
+  const uniqueCategoryIds = [...new Set(allCategoryIds)];
+  
+  const postCategories = await prisma.category.findMany({
     where: {
-      userId: user.id,
+      id: {
+        in: uniqueCategoryIds
+      }
     },
-    orderBy: { name: 'asc' },
     select: { id: true, name: true },
-  })
+  });
+
+  // 카테고리 ID를 이름으로 매핑
+  const categoryMap = new Map(postCategories.map(cat => [cat.id, cat.name]));
+
+  // 포스트에 카테고리 이름 추가
+  const postsWithCategories = posts.map(post => ({
+    ...post,
+    categoryNames: post.categoryIds 
+      ? post.categoryIds.map(id => categoryMap.get(id)).filter(Boolean)
+      : []
+  }));
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -227,24 +281,28 @@ export default async function UserBlogPage({
               </button>
             </div>
           </form>
-          <div className="w-full sm:w-64">
+          
+          {/* 다중 카테고리 필터 */}
+          <div className="w-full">
             <CategoryFilter 
               categories={categories}
               selectedCategoryId={categoryId}
+              selectedCategoryIds={selectedCategoryIds}
+              multiple={true}
             />
           </div>
         </div>
 
         {/* 포스트 목록 */}
-        {posts.length === 0 ? (
+        {postsWithCategories.length === 0 ? (
           <div className="text-center py-8">
             <div className="text-xl text-gray-500">
-              {searchQuery || categoryId ? "검색 결과가 없습니다." : "아직 작성된 글이 없습니다."}
+              {searchQuery || categoryId || categoryIds ? "검색 결과가 없습니다." : "아직 작성된 글이 없습니다."}
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {posts.map(post => (
+            {postsWithCategories.map(post => (
               <Link
                 key={post.id}
                 href={`/posts/${post.id}`}
@@ -257,7 +315,29 @@ export default async function UserBlogPage({
                   <h2 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
                     {post.title}
                   </h2>
-                  {post.category && (
+                  
+                  {/* 다중 카테고리 표시 */}
+                  {post.categoryNames && post.categoryNames.length > 0 && (
+                    <div className="mb-2 flex items-center gap-2">
+                      <div className="flex flex-wrap gap-1">
+                        {post.categoryNames.map((categoryName, index) => (
+                          <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800">
+                            {categoryName}
+                          </span>
+                        ))}
+                      </div>
+                      <span className="flex items-center text-xs text-gray-500 gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        {post.viewCount}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* 기존 단일 카테고리 표시 (하위 호환성) */}
+                  {(!post.categoryNames || post.categoryNames.length === 0) && post.category && (
                     <div className="mb-2 flex items-center gap-2">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800">
                         {post.category.name}
@@ -271,6 +351,7 @@ export default async function UserBlogPage({
                       </span>
                     </div>
                   )}
+                  
                   <p className="text-gray-500 text-sm line-clamp-1 overflow-hidden text-ellipsis whitespace-nowrap">
                     {post.content.replace(/<[^>]*>/g, "")}
                   </p>
@@ -281,13 +362,14 @@ export default async function UserBlogPage({
         )}
 
         {/* 페이지네이션 */}
-        {posts.length > 0 && (offset > 0 || offset + 30 < total) && (
+        {postsWithCategories.length > 0 && (offset > 0 || offset + 30 < total) && (
           <div className="mt-8 flex justify-center space-x-4">
             <Link
               href={`/${params.userUrlId}?${new URLSearchParams({
                 ...(searchQuery && { search: searchQuery }),
                 ...(searchField && { searchField }),
                 ...(categoryId && { categoryId }),
+                ...(categoryIds && { categoryIds }),
                 offset: '0'
               }).toString()}`}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 disabled:opacity-50"
@@ -299,6 +381,7 @@ export default async function UserBlogPage({
                 ...(searchQuery && { search: searchQuery }),
                 ...(searchField && { searchField }),
                 ...(categoryId && { categoryId }),
+                ...(categoryIds && { categoryIds }),
                 offset: String(Math.max(0, offset - 10))
               }).toString()}`}
               className={`px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 ${offset === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -310,6 +393,7 @@ export default async function UserBlogPage({
                 ...(searchQuery && { search: searchQuery }),
                 ...(searchField && { searchField }),
                 ...(categoryId && { categoryId }),
+                ...(categoryIds && { categoryIds }),
                 offset: String(offset + 10)
               }).toString()}`}
               className={`px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 ${offset + 30 >= total ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -321,6 +405,7 @@ export default async function UserBlogPage({
                 ...(searchQuery && { search: searchQuery }),
                 ...(searchField && { searchField }),
                 ...(categoryId && { categoryId }),
+                ...(categoryIds && { categoryIds }),
                 offset: String(Math.max(0, total - 30))
               }).toString()}`}
               className={`px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 ${offset + 30 >= total ? 'opacity-50 cursor-not-allowed' : ''}`}

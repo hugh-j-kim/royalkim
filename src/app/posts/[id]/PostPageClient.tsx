@@ -18,6 +18,7 @@ interface Post {
   user: { name: string; email: string; urlId: string | null }
   description?: string | null
   category: { id: string; name: string } | null
+  categories?: { id: string; name: string }[]
   tags: { id: string; name: string }[]
   comments: any[]
 }
@@ -29,6 +30,7 @@ const I18N: Record<string, { [key: string]: string }> = {
     updatedAt: "최근 수정일",
     viewCount: "조회수",
     viewAuthorPosts: "작성자 글 목록",
+    categories: "카테고리",
   },
   en: {
     author: "Author",
@@ -36,6 +38,7 @@ const I18N: Record<string, { [key: string]: string }> = {
     updatedAt: "Last Updated",
     viewCount: "Views",
     viewAuthorPosts: "Author's Posts",
+    categories: "Categories",
   }
 }
 
@@ -59,7 +62,18 @@ export default function PostPageClient({ post }: { post: Post }) {
               </svg>
               <b>{I18N[lang].viewCount}:</b> {post.viewCount}
             </span>
-            {post.category && (
+            
+            {post.categories && post.categories.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {post.categories.map((category) => (
+                  <span key={category.id} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800">
+                    {category.name}
+                  </span>
+                ))}
+              </div>
+            )}
+            
+            {(!post.categories || post.categories.length === 0) && post.category && (
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800">
                 {post.category.name}
               </span>

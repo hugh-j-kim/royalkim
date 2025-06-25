@@ -45,13 +45,32 @@ async function getPost(id: string) {
     notFound()
   }
 
+  // categoryIds 배열이 있으면 해당 카테고리들의 정보를 가져옴
+  let categories: Array<{ id: string; name: string }> = []
+  if (post.categoryIds && post.categoryIds.length > 0) {
+    categories = await prisma.category.findMany({
+      where: {
+        id: {
+          in: post.categoryIds
+        }
+      },
+      select: {
+        id: true,
+        name: true,
+      }
+    })
+  }
+
   // Update view count
   await prisma.post.update({
     where: { id },
     data: { viewCount: { increment: 1 } },
   })
 
-  return post
+  return {
+    ...post,
+    categories
+  }
 }
 
 // 동적 메타데이터 생성

@@ -10,12 +10,18 @@ interface Category {
 }
 
 interface CategorySelectProps {
-  value?: string;
-  onChange: (categoryId: string) => void;
+  value?: string | string[]; // 단일 값 또는 배열 값 모두 지원
+  onChange: (categoryId: string | string[]) => void;
   placeholder?: string;
+  multiple?: boolean; // 다중 선택 여부
 }
 
-export default function CategorySelect({ value, onChange, placeholder }: CategorySelectProps) {
+export default function CategorySelect({ 
+  value, 
+  onChange, 
+  placeholder, 
+  multiple = false 
+}: CategorySelectProps) {
   const { data: session } = useSession();
   const { t } = useLanguage();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -55,6 +61,26 @@ export default function CategorySelect({ value, onChange, placeholder }: Categor
     ));
   };
 
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (multiple) {
+      // 다중 선택인 경우
+      const selectedOptions = Array.from(e.target.selectedOptions).map(option => option.value);
+      onChange(selectedOptions);
+    } else {
+      // 단일 선택인 경우 (기존 방식)
+      onChange(e.target.value);
+    }
+  };
+
+  const getDisplayValue = () => {
+    if (multiple && Array.isArray(value)) {
+      return value;
+    } else if (!multiple && typeof value === 'string') {
+      return value;
+    }
+    return multiple ? [] : '';
+  };
+
   if (isLoading) {
     return (
       <div className="animate-pulse">
@@ -70,13 +96,19 @@ export default function CategorySelect({ value, onChange, placeholder }: Categor
       </label>
       <select
         id="category"
-        value={value || ""}
-        onChange={(e) => onChange(e.target.value)}
+        value={getDisplayValue()}
+        onChange={handleChange}
+        multiple={multiple}
         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm select-arrow py-2 px-3"
       >
-        <option value="">{placeholder || t("selectCategory")}</option>
+        {!multiple && <option value="">{placeholder || t("selectCategory")}</option>}
         {renderCategoryOptions(categories)}
       </select>
+      {multiple && (
+        <p className="mt-1 text-sm text-gray-500">
+          Ctrl (Cmd on Mac) + 클릭으로 여러 카테고리를 선택할 수 있습니다.
+        </p>
+      )}
     </div>
   );
 } 

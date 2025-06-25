@@ -83,7 +83,7 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { title, description, content, categoryId, published } = body
+    const { title, description, content, categoryIds, published } = body
 
     const updatedPost = await prisma.post.update({
       where: { id: params.id },
@@ -91,7 +91,7 @@ export async function PUT(
         title,
         description,
         content,
-        categoryId,
+        categoryIds: categoryIds || [], // 다중 카테고리만 사용
         published,
       },
       include: {
