@@ -6,8 +6,8 @@ import { useSession } from "next-auth/react"
 import { Editor } from '@tinymce/tinymce-react'
 import { useContext } from "react"
 import { LanguageContext } from "@/components/Providers"
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage"
-import { initializeApp } from "firebase/app"
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
+import { storage } from "@/lib/firebase"
 import CategoryMultiSelect from "@/components/CategoryMultiSelect"
 
 const I18N: Record<string, { [key: string]: string }> = {
@@ -34,19 +34,6 @@ const I18N: Record<string, { [key: string]: string }> = {
     publish: "Publish"
   }
 }
-
-const firebaseConfig = {
-  apiKey: "AIzaSyApThOThn_cT2heKV_W3JJ4o71-c4yWofw",
-  authDomain: "royalkim.firebaseapp.com",
-  projectId: "royalkim",
-  storageBucket: "royalkim.firebasestorage.app",
-  messagingSenderId: "1052940584501",
-  appId: "1:1052940584501:web:96da5ff02c3ad14785537c",
-  measurementId: "G-1929TKXLQP"
-}
-
-const app = initializeApp(firebaseConfig)
-const storage = getStorage(app)
 
 export default function NewPostPage() {
   const { lang } = useContext(LanguageContext)

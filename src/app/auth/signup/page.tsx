@@ -3,22 +3,8 @@
 import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage"
-import { initializeApp } from "firebase/app"
-
-// Firebase 설정
-const firebaseConfig = {
-  apiKey: "AIzaSyApThOThn_cT2heKV_W3JJ4o71-c4yWofw",
-  authDomain: "royalkim.firebaseapp.com",
-  projectId: "royalkim",
-  storageBucket: "royalkim.firebasestorage.app",
-  messagingSenderId: "1052940584501",
-  appId: "1:1052940584501:web:96da5ff02c3ad14785537c",
-  measurementId: "G-1929TKXLQP"
-}
-
-const app = initializeApp(firebaseConfig)
-const storage = getStorage(app)
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
+import { storage } from "@/lib/firebase"
 
 // urlId 유효성 검사 함수
 function isValidUrlId(value: string) {

@@ -4,8 +4,8 @@ import { useState, useRef, useContext, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Editor } from "@tinymce/tinymce-react"
 import { LanguageContext } from "@/components/Providers"
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage"
-import { initializeApp } from "firebase/app"
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
+import { storage } from "@/lib/firebase"
 import CategoryMultiSelect from "@/components/CategoryMultiSelect"
 
 interface Post {
@@ -64,19 +64,6 @@ const I18N: Record<string, { [key: string]: string }> = {
     publish: "Publish",
   }
 }
-
-const firebaseConfig = {
-  apiKey: "AIzaSyApThOThn_cT2heKV_W3JJ4o71-c4yWofw",
-  authDomain: "royalkim.firebaseapp.com",
-  projectId: "royalkim",
-  storageBucket: "royalkim.firebasestorage.app",
-  messagingSenderId: "1052940584501",
-  appId: "1:1052940584501:web:96da5ff02c3ad14785537c",
-  measurementId: "G-1929TKXLQP"
-}
-
-const app = initializeApp(firebaseConfig)
-const storage = getStorage(app)
 
 export function PostEditor({ post, onSubmit, isSubmitting: externalIsSubmitting }: PostEditorProps) {
   const router = useRouter()
@@ -271,14 +258,17 @@ export function PostEditor({ post, onSubmit, isSubmitting: externalIsSubmitting 
                     border-radius: 12px;
                   }
                   `,
-                images_upload_handler: ((blobInfo: any, success: any, failure: any, _progress?: any) => {
+                images_upload_handler: async (blobInfo: any) => {
                   const file = blobInfo.blob();
                   const storageRef = ref(storage, `image/${Date.now()}_${file.name}`);
-                  uploadBytes(storageRef, file)
-                    .then(() => getDownloadURL(storageRef))
-                    .then((url) => success(url))
-                    .catch((err) => failure("업로드 실패: " + err.message));
-                }) as any,
+                  try {
+                    await uploadBytes(storageRef, file);
+                    const url = await getDownloadURL(storageRef);
+                    return url;
+                  } catch (err) {
+                    throw new Error("업로드 실패: " + (err as Error).message);
+                  }
+                },
               }}
             />
           </div>
