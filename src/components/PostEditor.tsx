@@ -4,7 +4,7 @@ import { useState, useRef, useContext, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Editor } from "@tinymce/tinymce-react"
 import { LanguageContext } from "@/components/Providers"
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
+import { ref, uploadBytes, getDownloadURL, FirebaseStorage } from "firebase/storage"
 import { storage } from "@/lib/firebase"
 import CategoryMultiSelect from "@/components/CategoryMultiSelect"
 
@@ -229,7 +229,7 @@ export function PostEditor({ post, onSubmit, isSubmitting: externalIsSubmitting 
           </label>
           <div className="w-full min-h-[50vh] border border-gray-300 rounded-md overflow-hidden">
             <Editor
-              apiKey={process.env.NEXT_PUBLIC_ROYALKIM_TINYMCE_APIKEY}
+              apiKey="ctj7vwd103i0za3euzbfwqx8lx1hlmp2z8w0wlc7puz1pho2"
               onInit={(_evt: any, editor: any) => (editorRef.current = editor)}
               value={stripYoutubeDiv(editorContent)}
               onEditorChange={(content) => setEditorContent(content)}
@@ -259,16 +259,39 @@ export function PostEditor({ post, onSubmit, isSubmitting: externalIsSubmitting 
                   }
                   `,
                 images_upload_handler: async (blobInfo: any) => {
-                  const file = blobInfo.blob();
-                  const storageRef = ref(storage, `image/${Date.now()}_${file.name}`);
                   try {
+                    const file = blobInfo.blob();
+                    
+                    // 파일 크기 제한 (5MB)
+                    const maxSize = 5 * 1024 * 1024;
+                    if (file.size > maxSize) {
+                      throw new Error("파일 크기는 5MB 이하여야 합니다.");
+                    }
+                    
+                    // 파일 타입 검증
+                    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                    if (!validTypes.includes(file.type)) {
+                      throw new Error("지원되는 이미지 형식: JPG, PNG, GIF, WebP");
+                    }
+                    
+                    console.log('이미지 업로드 시작:', file.name, file.size, file.type);
+                    
+                    const storageRef = ref(storage, `image/${Date.now()}_${file.name}`);
                     await uploadBytes(storageRef, file);
                     const url = await getDownloadURL(storageRef);
+                    
+                    console.log('이미지 업로드 성공:', url);
                     return url;
                   } catch (err) {
+                    console.error('이미지 업로드 실패:', err);
                     throw new Error("업로드 실패: " + (err as Error).message);
                   }
                 },
+                // 드래그앤드롭 설정 추가
+                automatic_uploads: true,
+                file_picker_types: 'image',
+                images_upload_credentials: true,
+                images_upload_base_path: '/images',
               }}
             />
           </div>

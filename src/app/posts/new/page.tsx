@@ -207,16 +207,39 @@ export default function NewPostPage() {
                     valid_children: '+body[style]',
                     valid_elements: '*[*]',
                     images_upload_handler: async (blobInfo: any) => {
-                      const file = blobInfo.blob();
-                      const storageRef = ref(storage, `image/${Date.now()}_${file.name}`);
                       try {
+                        const file = blobInfo.blob();
+                        
+                        // 파일 크기 제한 (5MB)
+                        const maxSize = 5 * 1024 * 1024;
+                        if (file.size > maxSize) {
+                          throw new Error("파일 크기는 5MB 이하여야 합니다.");
+                        }
+                        
+                        // 파일 타입 검증
+                        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                        if (!validTypes.includes(file.type)) {
+                          throw new Error("지원되는 이미지 형식: JPG, PNG, GIF, WebP");
+                        }
+                        
+                        console.log('이미지 업로드 시작:', file.name, file.size, file.type);
+                        
+                        const storageRef = ref(storage, `image/${Date.now()}_${file.name}`);
                         await uploadBytes(storageRef, file);
                         const url = await getDownloadURL(storageRef);
+                        
+                        console.log('이미지 업로드 성공:', url);
                         return url;
                       } catch (err) {
+                        console.error('이미지 업로드 실패:', err);
                         throw new Error("업로드 실패: " + (err as Error).message);
                       }
-                    }
+                    },
+                    // 드래그앤드롭 설정 추가
+                    automatic_uploads: true,
+                    file_picker_types: 'image',
+                    images_upload_credentials: true,
+                    images_upload_base_path: '/images',
                   }}
                 />
               </div>
