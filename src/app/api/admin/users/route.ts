@@ -25,6 +25,7 @@ export async function GET(_request: Request) {
         createdAt: true,
         approvedAt: true,
         deletedAt: true,
+        urlId: true,
       },
       orderBy: {
         createdAt: "desc",

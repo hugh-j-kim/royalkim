@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 // import { Button } from "@/components/ui/button" // 사용하지 않으므로 삭제
 import Link from "next/link"
 import Image from "next/image"
@@ -10,12 +10,32 @@ import Image from "next/image"
 export default function Dashboard() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const [copied, setCopied] = useState(false)
+
+  // 환경에 따른 블로그 URL 설정
+  const getBlogUrl = (urlId: string) => {
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://royalkim.com' 
+      : 'http://localhost:3000'
+    return `${baseUrl}/${urlId}`
+  }
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/auth/signin")
     }
   }, [status, router])
+
+  const copyToClipboard = async () => {
+    const blogUrl = getBlogUrl(session?.user?.urlId || '')
+    try {
+      await navigator.clipboard.writeText(blogUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy: ', err)
+    }
+  }
 
   if (status === "loading") {
     return (
@@ -79,9 +99,31 @@ export default function Dashboard() {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">블로그 주소</label>
-                <p className="text-lg text-pink-600 font-mono break-all">
-                  /{session?.user?.urlId}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-lg text-pink-600 font-mono break-all flex-1">
+                    {getBlogUrl(session?.user?.urlId || '')}
+                  </p>
+                  <button
+                    onClick={copyToClipboard}
+                    className="px-3 py-1 bg-pink-500 hover:bg-pink-600 text-white text-sm rounded-md transition-colors duration-200 flex items-center gap-1"
+                  >
+                    {copied ? (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        복사됨
+                      </>
+                    ) : (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        복사
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
               
               {session?.user?.blogTitle && (
