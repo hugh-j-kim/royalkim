@@ -612,85 +612,82 @@ export default function AdminPage() {
 
         {/* 검색 필터 */}
         <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1">
-              <div className="flex gap-2">
-                <select
-                  value={searchField}
-                  onChange={(e) => handleSearchFieldChange(e.target.value as 'name' | 'urlId' | 'email' | 'date')}
-                  className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent appearance-none bg-white bg-no-repeat bg-right pr-8"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                    backgroundPosition: 'right 0.5rem center',
-                    backgroundSize: '1.5em 1.5em'
-                  }}
-                >
-                  <option value="name">{I18N[lang].searchByName}</option>
-                  <option value="urlId">{I18N[lang].searchByUrlId}</option>
-                  <option value="email">{I18N[lang].searchByEmail}</option>
-                  <option value="date">{I18N[lang].searchByDate}</option>
-                </select>
-                
-                {searchField === 'date' ? (
-                  <div className="flex gap-2 flex-1">
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm text-gray-600 whitespace-nowrap">{I18N[lang].dateFrom}</span>
-                      <input
-                        type="date"
-                        value={dateFrom}
-                        onChange={(e) => handleDateFromChange(e.target.value)}
-                        className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm text-gray-600 whitespace-nowrap">{I18N[lang].dateTo}</span>
-                      <input
-                        type="date"
-                        value={dateTo}
-                        onChange={(e) => handleDateToChange(e.target.value)}
-                        className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                      />
-                    </div>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <select
+                value={searchField}
+                onChange={(e) => handleSearchFieldChange(e.target.value as 'name' | 'urlId' | 'email' | 'date')}
+                className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent appearance-none bg-white bg-no-repeat bg-right pr-8 flex-shrink-0"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 0.5rem center',
+                  backgroundSize: '1.5em 1.5em'
+                }}
+              >
+                <option value="name">{I18N[lang].searchByName}</option>
+                <option value="urlId">{I18N[lang].searchByUrlId}</option>
+                <option value="email">{I18N[lang].searchByEmail}</option>
+                <option value="date">{I18N[lang].searchByDate}</option>
+              </select>
+              
+              {searchField === 'date' ? (
+                <div className="flex flex-col sm:flex-row gap-2 flex-1">
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm text-gray-600 whitespace-nowrap">{I18N[lang].dateFrom}</span>
+                    <input
+                      type="date"
+                      value={dateFrom}
+                      onChange={(e) => handleDateFromChange(e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent flex-1"
+                    />
                   </div>
-                ) : (
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => handleSearchTermChange(e.target.value)}
-                    placeholder={
-                      searchField === 'name' ? I18N[lang].searchPlaceholderName :
-                      searchField === 'urlId' ? I18N[lang].searchPlaceholderUrlId :
-                      I18N[lang].searchPlaceholderEmail
-                    }
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                  />
-                )}
-                
-                {(searchTerm || dateFrom || dateTo) && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={executeSearch}
-                      disabled={isSearching}
-                      className="px-4 py-2 text-sm font-medium text-white bg-pink-600 rounded-md hover:bg-pink-700 disabled:bg-pink-400 transition-colors"
-                    >
-                      {isSearching ? I18N[lang].searching : I18N[lang].search}
-                    </button>
-                    <button
-                      onClick={clearSearch}
-                      className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-                    >
-                      {I18N[lang].clearSearch}
-                    </button>
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm text-gray-600 whitespace-nowrap">{I18N[lang].dateTo}</span>
+                    <input
+                      type="date"
+                      value={dateTo}
+                      onChange={(e) => handleDateToChange(e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent flex-1"
+                    />
                   </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => handleSearchTermChange(e.target.value)}
+                  placeholder={
+                    searchField === 'name' ? I18N[lang].searchPlaceholderName :
+                    searchField === 'urlId' ? I18N[lang].searchPlaceholderUrlId :
+                    I18N[lang].searchPlaceholderEmail
+                  }
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                />
+              )}
             </div>
-            {searchApplied && (searchTerm || dateFrom || dateTo) && (
-              <div className="text-sm text-gray-600 flex items-center">
-                {I18N[lang].searchResultsCount.replace('{count}', tabs.find(tab => tab.id === activeTab)?.count.toString() || '0')}
-              </div>
-            )}
+            
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button
+                onClick={executeSearch}
+                disabled={isSearching}
+                className="px-4 py-2 text-sm font-medium text-white bg-pink-600 rounded-md hover:bg-pink-700 disabled:bg-pink-400 transition-colors flex-1 sm:flex-none"
+              >
+                {isSearching ? I18N[lang].searching : I18N[lang].search}
+              </button>
+              <button
+                onClick={clearSearch}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors flex-1 sm:flex-none"
+              >
+                {I18N[lang].clearSearch}
+              </button>
+            </div>
           </div>
+          
+          {searchApplied && (searchTerm || dateFrom || dateTo) && (
+            <div className="mt-3 text-sm text-gray-600">
+              {I18N[lang].searchResultsCount.replace('{count}', tabs.find(tab => tab.id === activeTab)?.count.toString() || '0')}
+            </div>
+          )}
         </div>
 
         {/* 탭 컨텐츠 */}
