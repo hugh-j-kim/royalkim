@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation"
+import { Metadata } from "next"
 import prisma from "@/lib/prisma"
 import Link from "next/link"
 import { getServerSession, Session } from "next-auth"
@@ -50,6 +51,44 @@ function getFirstMedia(content: string) {
       </svg>
     </div>
   );
+}
+
+// 동적 메타데이터 생성
+export async function generateMetadata({ params }: { params: { userUrlId: string } }): Promise<Metadata> {
+  const user = await prisma.user.findFirst({
+    where: { urlId: params.userUrlId } as any,
+    select: {
+      id: true,
+      name: true,
+      blogTitle: true,
+    },
+  })
+
+  if (!user) {
+    return {
+      title: '블로그를 찾을 수 없습니다',
+      description: '요청하신 블로그를 찾을 수 없습니다.',
+    }
+  }
+
+  return {
+    title: user.blogTitle || `${user.name}의 블로그`,
+    description: `${user.name}의 블로그입니다.`,
+    alternates: {
+      canonical: `/${params.userUrlId}`,
+    },
+    openGraph: {
+      title: user.blogTitle || `${user.name}의 블로그`,
+      description: `${user.name}의 블로그입니다.`,
+      url: `https://royalkim.com/${params.userUrlId}`,
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: user.blogTitle || `${user.name}의 블로그`,
+      description: `${user.name}의 블로그입니다.`,
+    },
+  }
 }
 
 export default async function UserBlogPage({ 

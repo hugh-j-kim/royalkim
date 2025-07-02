@@ -80,9 +80,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: post.title,
     description: post.description || undefined,
+    alternates: {
+      canonical: `/posts/${params.id}`,
+    },
     openGraph: {
       title: post.title,
       description: post.description || undefined,
+      url: `https://royalkim.com/posts/${params.id}`,
       type: 'article',
       publishedTime: post.createdAt.toISOString(),
       authors: [(post as any).user.name || 'Royal Kim'],
