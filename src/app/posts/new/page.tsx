@@ -36,15 +36,16 @@ const I18N: Record<string, { [key: string]: string }> = {
 }
 
 export default function NewPostPage() {
-  const { lang } = useContext(LanguageContext)
   const router = useRouter()
   const { data: session, status } = useSession()
-  const [title, setTitle] = React.useState("")
-  const [content, setContent] = React.useState("")
-  const [description, setDescription] = React.useState("")
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [categoryIds, setCategoryIds] = useState<string[]>([])
+  const { lang } = useContext(LanguageContext)
+  const [title, setTitle] = useState("")
+  const [description, setDescription] = useState("")
+  const [content, setContent] = useState("")
   const [published, setPublished] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [categoryIds, setCategoryIds] = useState<string[]>([])
+  const [uploadStatus, setUploadStatus] = useState<string>("")
 
   // 로그인하지 않은 사용자는 메인 페이지로 리다이렉트
   React.useEffect(() => {
@@ -167,10 +168,24 @@ export default function NewPostPage() {
             >
               {I18N[lang].content}
             </label>
+            
+            {/* 업로드 상태 표시 */}
+            {uploadStatus && (
+              <div className={`mb-2 p-2 rounded-md text-sm ${
+                uploadStatus.includes("완료") 
+                  ? "bg-green-100 text-green-700" 
+                  : uploadStatus.includes("실패") || uploadStatus.includes("지원") || uploadStatus.includes("크기")
+                  ? "bg-red-100 text-red-700"
+                  : "bg-blue-100 text-blue-700"
+              }`}>
+                {uploadStatus}
+              </div>
+            )}
+            
             <div className="w-full min-h-[55vh] border border-gray-300 rounded-md overflow-hidden">
               <div className="w-full h-[55vh] relative">
                 <Editor
-                  apiKey="ctj7vwd103i0za3euzbfwqx8lx1hlmp2z8w0wlc7puz1pho2"
+                  apiKey={process.env.NEXT_PUBLIC_ROYALKIM_TINYMCE_APIKEY}
                   value={stripYoutubeDiv(content)}
                   onEditorChange={(content) => setContent(content)}
                   init={{
@@ -208,13 +223,40 @@ export default function NewPostPage() {
                     valid_elements: '*[*]',
                     images_upload_handler: async (blobInfo: any) => {
                       const file = blobInfo.blob();
+                      
+                      // 파일 크기 검증 (5MB 제한)
+                      if (file.size > 5 * 1024 * 1024) {
+                        setUploadStatus("파일 크기는 5MB 이하여야 합니다.");
+                        throw new Error("파일 크기는 5MB 이하여야 합니다.");
+                      }
+                      
+                      // 파일 형식 검증
+                      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                      if (!validTypes.includes(file.type)) {
+                        setUploadStatus("지원되는 이미지 형식: JPG, PNG, GIF, WebP");
+                        throw new Error("지원되는 이미지 형식: JPG, PNG, GIF, WebP");
+                      }
+                      
                       const storageRef = ref(storage, `image/${Date.now()}_${file.name}`);
                       try {
+                        // 업로드 진행 상태 표시
+                        setUploadStatus("이미지 업로드 중...");
+                        console.log("이미지 업로드 중...");
+                        
                         await uploadBytes(storageRef, file);
                         const url = await getDownloadURL(storageRef);
+                        
+                        setUploadStatus("이미지 업로드 완료!");
+                        console.log("이미지 업로드 완료:", url);
+                        
+                        // 3초 후 상태 메시지 제거
+                        setTimeout(() => setUploadStatus(""), 3000);
+                        
                         return url;
                       } catch (err) {
-                        throw new Error("업로드 실패: " + (err as Error).message);
+                        console.error("이미지 업로드 실패:", err);
+                        setUploadStatus("이미지 업로드에 실패했습니다.");
+                        throw new Error("이미지 업로드에 실패했습니다: " + (err as Error).message);
                       }
                     }
                   }}

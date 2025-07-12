@@ -72,9 +72,10 @@ export function PostEditor({ post, onSubmit, isSubmitting: externalIsSubmitting 
   const [description, setDescription] = useState(post.description || "")
   const [internalIsSubmitting, setInternalIsSubmitting] = useState(false)
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(post.categoryIds || [])
+  const [published, setPublished] = useState(post.published)
+  const [uploadStatus, setUploadStatus] = useState<string>("")
   const editorRef = useRef<any>(null)
   const [editorContent, setEditorContent] = useState(post.content)
-  const [published, setPublished] = useState(post.published)
 
   const isSubmitting = externalIsSubmitting ?? internalIsSubmitting
 
@@ -227,6 +228,20 @@ export function PostEditor({ post, onSubmit, isSubmitting: externalIsSubmitting 
           <label htmlFor="content" className="block text-sm font-medium text-gray-700">
             {I18N[lang].content}
           </label>
+          
+          {/* 업로드 상태 표시 */}
+          {uploadStatus && (
+            <div className={`mb-2 p-2 rounded-md text-sm ${
+              uploadStatus.includes("완료") 
+                ? "bg-green-100 text-green-700" 
+                : uploadStatus.includes("실패") || uploadStatus.includes("지원") || uploadStatus.includes("크기")
+                ? "bg-red-100 text-red-700"
+                : "bg-blue-100 text-blue-700"
+            }`}>
+              {uploadStatus}
+            </div>
+          )}
+          
           <div className="w-full min-h-[50vh] border border-gray-300 rounded-md overflow-hidden">
             <Editor
               apiKey={process.env.NEXT_PUBLIC_ROYALKIM_TINYMCE_APIKEY}
@@ -260,13 +275,40 @@ export function PostEditor({ post, onSubmit, isSubmitting: externalIsSubmitting 
                   `,
                 images_upload_handler: async (blobInfo: any) => {
                   const file = blobInfo.blob();
+                  
+                  // 파일 크기 검증 (5MB 제한)
+                  if (file.size > 5 * 1024 * 1024) {
+                    setUploadStatus("파일 크기는 5MB 이하여야 합니다.");
+                    throw new Error("파일 크기는 5MB 이하여야 합니다.");
+                  }
+                  
+                  // 파일 형식 검증
+                  const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                  if (!validTypes.includes(file.type)) {
+                    setUploadStatus("지원되는 이미지 형식: JPG, PNG, GIF, WebP");
+                    throw new Error("지원되는 이미지 형식: JPG, PNG, GIF, WebP");
+                  }
+                  
                   const storageRef = ref(storage, `image/${Date.now()}_${file.name}`);
                   try {
+                    // 업로드 진행 상태 표시
+                    setUploadStatus("이미지 업로드 중...");
+                    console.log("이미지 업로드 중...");
+                    
                     await uploadBytes(storageRef, file);
                     const url = await getDownloadURL(storageRef);
+                    
+                    setUploadStatus("이미지 업로드 완료!");
+                    console.log("이미지 업로드 완료:", url);
+                    
+                    // 3초 후 상태 메시지 제거
+                    setTimeout(() => setUploadStatus(""), 3000);
+                    
                     return url;
                   } catch (err) {
-                    throw new Error("업로드 실패: " + (err as Error).message);
+                    console.error("이미지 업로드 실패:", err);
+                    setUploadStatus("이미지 업로드에 실패했습니다.");
+                    throw new Error("이미지 업로드에 실패했습니다: " + (err as Error).message);
                   }
                 },
               }}
