@@ -251,7 +251,8 @@ export function PostEditor({ post, onSubmit, isSubmitting: externalIsSubmitting 
               init={{
                 height: "50vh",
                 menubar: true,
-                language: lang,
+                language: 'ko',
+                language_url: '/langs/ko.js',
                 plugins: [
                   "advlist", "autolink", "lists", "link", "image", "media", "charmap", "preview", "anchor",
                   "searchreplace", "visualblocks", "code", "fullscreen",
