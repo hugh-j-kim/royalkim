@@ -242,6 +242,11 @@ export function PostEditor({ post, onSubmit, isSubmitting: externalIsSubmitting 
             </div>
           )}
           
+          {/* 이미지 업로드 안내문 */}
+          <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded">
+            지원되는 이미지 형식: JPG, PNG, GIF, WebP (HEIC, HEIF 등은 지원하지 않습니다. iPhone 사진은 JPG로 변환 후 업로드해 주세요.)
+          </div>
+
           <div className="w-full min-h-[50vh] border border-gray-300 rounded-md overflow-hidden">
             <Editor
               apiKey={process.env.NEXT_PUBLIC_ROYALKIM_TINYMCE_APIKEY}
@@ -279,6 +284,7 @@ export function PostEditor({ post, onSubmit, isSubmitting: externalIsSubmitting 
                   
                   // 파일 크기 검증 (5MB 제한)
                   if (file.size > 5 * 1024 * 1024) {
+                    alert("파일 크기는 5MB 이하여야 합니다.");
                     setUploadStatus("파일 크기는 5MB 이하여야 합니다.");
                     throw new Error("파일 크기는 5MB 이하여야 합니다.");
                   }
@@ -286,7 +292,8 @@ export function PostEditor({ post, onSubmit, isSubmitting: externalIsSubmitting 
                   // 파일 형식 검증
                   const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
                   if (!validTypes.includes(file.type)) {
-                    setUploadStatus("지원되는 이미지 형식: JPG, PNG, GIF, WebP");
+                    alert("지원되는 이미지 형식: JPG, PNG, GIF, WebP (HEIC, HEIF 등은 지원하지 않습니다. iPhone 사진은 JPG로 변환 후 업로드해 주세요.)");
+                    setUploadStatus("지원되는 이미지 형식: JPG, PNG, GIF, WebP (HEIC, HEIF 등은 지원하지 않습니다. iPhone 사진은 JPG로 변환 후 업로드해 주세요.)");
                     throw new Error("지원되는 이미지 형식: JPG, PNG, GIF, WebP");
                   }
                   
