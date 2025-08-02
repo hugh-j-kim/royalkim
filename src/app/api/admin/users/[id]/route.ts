@@ -18,12 +18,13 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     // 삭제 이력 기록
     await prisma.userDeleteLog.create({
       data: {
+        id: crypto.randomUUID(),
         userId: user.id,
         email: user.email,
         name: user.name,
-        deletedBy: session.user.id,
-        reason: reason || null,
-        roleAtDelete: user.role,
+        deletedBy: session.user.email || '',
+        reason,
+        roleAtDelete: user.role
       }
     })
     return NextResponse.json({ success: true })

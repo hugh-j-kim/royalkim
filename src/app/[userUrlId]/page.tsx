@@ -165,7 +165,7 @@ export default async function UserBlogPage({
       createdAt: true,
       viewCount: true,
       content: true,
-      category: { select: { name: true } },
+      Category: { select: { name: true } },
       categoryIds: true,
     },
   })
@@ -378,10 +378,10 @@ export default async function UserBlogPage({
                   )}
                   
                   {/* 기존 단일 카테고리 표시 (하위 호환성) */}
-                  {(!post.categoryNames || post.categoryNames.length === 0) && post.category && (
+                  {(!post.categoryNames || post.categoryNames.length === 0) && post.Category && (
                     <div className="mb-2 flex items-center gap-2">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800">
-                        {post.category.name}
+                        {post.Category.name}
                       </span>
                       <span className="flex items-center text-xs text-gray-500 gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

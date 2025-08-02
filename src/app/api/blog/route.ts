@@ -8,9 +8,9 @@ export async function GET() {
         id: "cmb9bjaex0000b2shlxe8e868"
       },
       include: {
-        posts: true,
-        categories: true,
-        series: true
+        Post: true,
+        Category: true,
+        Series: true
       }
     })
 

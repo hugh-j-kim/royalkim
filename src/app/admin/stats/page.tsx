@@ -166,36 +166,25 @@ export default function AdminStatsPage() {
   }, [session])
 
   // 프로젝트 운영 기간 계산
-  useEffect(() => {
-    const calculateProjectDuration = () => {
-      const projectStart = new Date('2025-04-26T21:21:53')
-      const now = new Date()
-      const diffTime = Math.abs(now.getTime() - projectStart.getTime())
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-      const diffHours = Math.ceil(diffTime / (1000 * 60 * 60))
-      const diffMinutes = Math.ceil(diffTime / (1000 * 60))
-      
-      let durationText = ''
-      if (diffDays > 1) {
-        durationText = `${diffDays}일`
-      } else if (diffHours > 1) {
-        durationText = `${diffHours}시간`
-      } else {
-        durationText = `${diffMinutes}분`
-      }
-      
-      const durationElement = document.getElementById('projectDuration')
-      if (durationElement) {
-        durationElement.textContent = durationText
-      }
-    }
-
-    calculateProjectDuration()
-    // 1분마다 업데이트
-    const interval = setInterval(calculateProjectDuration, 60000)
+  const calculateProjectDuration = () => {
+    const projectStart = new Date('2025-04-26T21:21:53')
+    const now = new Date()
+    const diffTime = Math.abs(now.getTime() - projectStart.getTime())
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    const diffHours = Math.ceil(diffTime / (1000 * 60 * 60))
+    const diffMinutes = Math.ceil(diffTime / (1000 * 60))
     
-    return () => clearInterval(interval)
-  }, [])
+    let durationText = ''
+    if (diffDays > 1) {
+      durationText = `${diffDays}일`
+    } else if (diffHours > 1) {
+      durationText = `${diffHours}시간`
+    } else {
+      durationText = `${diffMinutes}분`
+    }
+    
+    return durationText
+  }
 
   const fetchStats = async () => {
     try {
@@ -263,7 +252,7 @@ export default function AdminStatsPage() {
             </div>
             <div className="text-right">
               <p className="text-sm opacity-90">프로젝트 운영 기간</p>
-              <p className="text-lg font-semibold" id="projectDuration">계산 중...</p>
+              <p className="text-lg font-semibold">{calculateProjectDuration()}</p>
             </div>
           </div>
         </div>

@@ -176,11 +176,13 @@ export async function POST(request: Request) {
 
     const category = await prisma.category.create({
       data: {
+        id: crypto.randomUUID(),
         name,
         description: description || "",
         parentId: parentId || null,
         isPublic,
-        userId: session.user.id
+        userId: session.user.id,
+        updatedAt: new Date()
       }
     });
 
@@ -192,7 +194,7 @@ export async function POST(request: Request) {
       include: {
         _count: {
           select: {
-            posts: true,
+            Post: true,
             // subcategories: true, // 타입 에러 방지용 주석
           },
         },

@@ -30,18 +30,11 @@ export async function POST(request: NextRequest) {
     // Accept-Language 헤더 (언어 설정)
     const acceptLanguage = headers.get('accept-language') || null
     
-    // Accept 헤더 (브라우저가 받을 수 있는 콘텐츠 타입)
-    const accept = headers.get('accept') || null
-    
     // Sec-Ch-Ua 헤더 (브라우저 정보 - 최신 브라우저)
-    const secChUa = headers.get('sec-ch-ua') || null
-    const secChUaPlatform = headers.get('sec-ch-ua-platform') || null
     const secChUaMobile = headers.get('sec-ch-ua-mobile') || null
 
     // HTTPS 관련 헤더들
     const xForwardedProto = headers.get('x-forwarded-proto') // 'https' 또는 'http'
-    const xForwardedHost = headers.get('x-forwarded-host') // 원본 호스트
-    const xForwardedPort = headers.get('x-forwarded-port') // 원본 포트
 
     // 디버깅을 위한 로깅 (개발 환경에서만)
     if (process.env.NODE_ENV === 'development') {
@@ -53,7 +46,6 @@ export async function POST(request: NextRequest) {
       console.log('X-Real-IP:', realIp)
       console.log('CF-Connecting-IP:', cfConnectingIp)
       console.log('X-Forwarded-Proto:', xForwardedProto)
-      console.log('X-Forwarded-Host:', xForwardedHost)
       console.log('Accept-Language:', acceptLanguage)
       console.log('Sec-CH-UA-Mobile:', secChUaMobile)
       console.log('================================')
@@ -83,10 +75,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Referrer 분석 및 정리
-    const referrerInfo = analyzeReferrer(referrer, xForwardedProto)
+    const referrerInfo = analyzeReferrer(referrer)
 
     const visitorLog = await prisma.visitorLog.create({
       data: {
+        id: crypto.randomUUID(),
         userId,
         postId,
         referrer: referrerInfo.cleanReferrer,
@@ -173,7 +166,7 @@ function parseUserAgent(userAgent: string) {
 }
 
 // Referrer 분석 함수
-function analyzeReferrer(referrer: string | null, protocol: string | null) {
+function analyzeReferrer(referrer: string | null) {
   if (!referrer) {
     return {
       type: 'direct',

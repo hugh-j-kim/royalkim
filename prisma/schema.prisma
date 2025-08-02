@@ -8,7 +8,7 @@ datasource db {
 }
 
 model Account {
-  id                String  @id @default(cuid())
+  id                String  @id
   userId            String
   type              String
   provider          String
@@ -20,21 +20,89 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  User              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
 
+model Category {
+  id             String     @id
+  name           String
+  description    String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime
+  userId         String
+  isPublic       Boolean    @default(true)
+  parentId       String?
+  Category       Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
+  other_Category Category[] @relation("CategoryToCategory")
+  User           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Post           Post[]
+}
+
+model Comment {
+  id        String   @id
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  postId    String
+  userId    String
+  Post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Post {
+  id          String       @id
+  title       String
+  content     String
+  published   Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime
+  viewCount   Int          @default(0)
+  description String?
+  categoryId  String?
+  seriesId    String?
+  seriesOrder Int?
+  userId      String
+  categoryIds String[]     @default([])
+  Comment     Comment[]
+  Category    Category?    @relation(fields: [categoryId], references: [id])
+  Series      Series?      @relation(fields: [seriesId], references: [id])
+  User        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  VisitorLog  VisitorLog[]
+  Tag         Tag[]
+}
+
+model Series {
+  id          String   @id
+  title       String
+  description String?
+  isPublic    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+  userId      String
+  Post        Post[]
+  User        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 model Session {
-  id           String   @id @default(cuid())
+  id           String   @id
   sessionToken String   @unique
   userId       String
   expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Tag {
+  id        String   @id
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  Post      Post[]
 }
 
 model User {
-  id            String          @id @default(cuid())
+  id            String          @id
   name          String?
   email         String?         @unique
   password      String?
@@ -43,18 +111,30 @@ model User {
   approvedAt    DateTime?
   createdAt     DateTime        @default(now())
   role          String          @default("PENDING")
-  updatedAt     DateTime        @updatedAt
+  updatedAt     DateTime
   deletedAt     DateTime?
   blogTitle     String?
   urlId         String?         @unique
-  accounts      Account[]
-  categories    Category[]
-  comments      Comment[]
-  posts         Post[]
-  series        Series[]
-  sessions      Session[]
-  deleteLogs    UserDeleteLog[] @relation("UserDeleteLogs")
-  visitorLogs   VisitorLog[]
+  Account       Account[]
+  Category      Category[]
+  Comment       Comment[]
+  Post          Post[]
+  Series        Series[]
+  Session       Session[]
+  UserDeleteLog UserDeleteLog[]
+  VisitorLog    VisitorLog[]
+}
+
+model UserDeleteLog {
+  id           String   @id
+  userId       String
+  email        String?
+  name         String?
+  deletedBy    String
+  deletedAt    DateTime @default(now())
+  reason       String?
+  roleAtDelete String?
+  User         User     @relation(fields: [userId], references: [id])
 }
 
 model VerificationToken {
@@ -65,88 +145,8 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-model Post {
-  id          String       @id @default(cuid())
-  title       String
-  content     String
-  published   Boolean      @default(false)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  viewCount   Int          @default(0)
-  description String?
-  categoryId  String?
-  seriesId    String?
-  seriesOrder Int?
-  userId      String
-  categoryIds String[]     @default([])
-  comments    Comment[]
-  category    Category?    @relation(fields: [categoryId], references: [id])
-  series      Series?      @relation(fields: [seriesId], references: [id])
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  visitorLogs VisitorLog[]
-  tags        Tag[]        @relation("PostToTag")
-}
-
-model UserDeleteLog {
-  id           String   @id @default(cuid())
-  userId       String
-  email        String?
-  name         String?
-  deletedBy    String
-  deletedAt    DateTime @default(now())
-  reason       String?
-  roleAtDelete String?
-  user         User     @relation("UserDeleteLogs", fields: [userId], references: [id])
-}
-
-model Series {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  isPublic    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  userId      String
-  posts       Post[]
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model Tag {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  posts     Post[]   @relation("PostToTag")
-}
-
-model Comment {
-  id        String   @id @default(cuid())
-  content   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  postId    String
-  userId    String
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model Category {
-  id            String     @id @default(cuid())
-  name          String
-  description   String?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  userId        String
-  isPublic      Boolean    @default(true)
-  parentId      String?
-  parent        Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
-  subcategories Category[] @relation("CategoryToCategory")
-  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  posts         Post[]
-}
-
 model VisitorLog {
-  id        String   @id @default(cuid())
+  id        String   @id
   userId    String
   postId    String?
   referrer  String?
@@ -155,6 +155,6 @@ model VisitorLog {
   country   String?
   city      String?
   visitedAt DateTime @default(now())
-  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

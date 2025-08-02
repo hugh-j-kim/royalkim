@@ -90,9 +90,9 @@ export default async function Home({
       content: true,
       createdAt: true,
       viewCount: true,
-      category: { select: { name: true } },
+      Category: { select: { name: true } },
       categoryIds: true,
-      user: { select: { name: true, urlId: true, image: true } }
+      User: { select: { name: true, urlId: true, image: true } }
     },
   })
 
@@ -230,10 +230,10 @@ export default async function Home({
                     </div>
                   )}
                   
-                  {(!post.categoryNames || post.categoryNames.length === 0) && post.category && (
+                  {(!post.categoryNames || post.categoryNames.length === 0) && post.Category && (
                     <div className="mb-2 flex items-center justify-between">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800">
-                        {post.category.name}
+                        {post.Category.name}
                       </span>
                       <span className="flex items-center text-xs text-gray-500 gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -245,7 +245,7 @@ export default async function Home({
                     </div>
                   )}
                   
-                  {(!post.categoryNames || post.categoryNames.length === 0) && !post.category && (
+                  {(!post.categoryNames || post.categoryNames.length === 0) && !post.Category && (
                     <div className="mb-2 flex items-center justify-end">
                       <span className="flex items-center text-xs text-gray-500 gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -261,10 +261,10 @@ export default async function Home({
                     {post.content.replace(/<[^>]*>/g, '')}
                   </p>
                   <div className="text-right text-xs text-gray-400 mt-2">
-                    {post.user.urlId && post.user.name ? (
-                      <UserLink urlId={post.user.urlId} name={post.user.name} image={post.user.image} />
+                    {post.User.urlId && post.User.name ? (
+                      <UserLink urlId={post.User.urlId} name={post.User.name} image={post.User.image} />
                     ) : (
-                      <span>by {post.user.name}</span>
+                      <span>by {post.User.name}</span>
                     )}
                   </div>
                 </div>

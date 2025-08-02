@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/options'
 import { prisma } from '@/lib/prisma'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions) as any
     
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
         id: true,
         title: true,
         viewCount: true,
-        user: {
+        User: {
           select: {
             name: true,
             urlId: true
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
         title: true,
         viewCount: true,
         createdAt: true,
-        user: {
+        User: {
           select: {
             name: true,
             urlId: true
@@ -163,10 +163,10 @@ export async function GET(request: NextRequest) {
     // 최근 방문자 로그 (전체)
     const recentVisitors = await prisma.visitorLog.findMany({
       include: {
-        post: {
+        Post: {
           select: { title: true }
         },
-        user: {
+        User: {
           select: { name: true, urlId: true }
         }
       },
@@ -179,7 +179,7 @@ export async function GET(request: NextRequest) {
       where: {
         role: "USER",
         deletedAt: null,
-        posts: {
+        Post: {
           some: {
             createdAt: {
               gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
@@ -206,12 +206,12 @@ export async function GET(request: NextRequest) {
       })),
       topPosts: topPosts.map(post => ({
         ...post,
-        user: post.user
+        user: post.User
       })),
       recentPosts: recentPosts.map(post => ({
         ...post,
         createdAt: post.createdAt.toISOString(),
-        user: post.user
+        user: post.User
       })),
       monthlySignups,
       monthlyPosts,
@@ -226,9 +226,9 @@ export async function GET(request: NextRequest) {
       recentVisitors: recentVisitors.map(visitor => ({
         ...visitor,
         visitedAt: visitor.visitedAt.toISOString(),
-        postTitle: visitor.post?.title,
-        userName: visitor.user?.name,
-        userUrlId: visitor.user?.urlId
+        postTitle: visitor.Post?.title,
+        userName: visitor.User?.name,
+        userUrlId: visitor.User?.urlId
       }))
     }
 

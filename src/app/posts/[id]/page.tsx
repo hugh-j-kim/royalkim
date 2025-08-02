@@ -19,7 +19,7 @@ async function getPost(id: string) {
           urlId: true,
         },
       },
-      category: {
+      Category: {
         select: {
           id: true,
           name: true,

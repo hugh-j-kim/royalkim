@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
       }),
       prisma.comment.count({
         where: {
-          post: { userId }
+          Post: { userId }
         }
       }),
       prisma.category.count({
@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
     const recentVisitors = await prisma.visitorLog.findMany({
       where: { userId },
       include: {
-        post: {
+        Post: {
           select: { title: true }
         }
       },
@@ -164,7 +164,7 @@ export async function GET(request: NextRequest) {
       recentVisitors: recentVisitors.map(visitor => ({
         ...visitor,
         visitedAt: visitor.visitedAt.toISOString(),
-        postTitle: visitor.post?.title
+        postTitle: visitor.Post?.title
       }))
     }
 

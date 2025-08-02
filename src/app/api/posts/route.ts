@@ -53,9 +53,9 @@ export async function GET(request: Request) {
       prisma.post.findMany({
         where,
         include: {
-          category: true,
-          series: true,
-          tags: true,
+          Category: true,
+          Series: true,
+          Tag: true,
         },
         orderBy: {
           createdAt: "desc",
@@ -105,26 +105,27 @@ export async function POST(request: Request) {
 
     const post = await prisma.post.create({
       data: {
+        id: crypto.randomUUID(),
         title,
         description,
         content,
         userId: user.id,
         published: true,
         categoryIds: categoryIds || [], // 다중 카테고리만 사용
+        updatedAt: new Date()
       },
       include: {
-        user: {
+        User: {
           select: {
             name: true,
             email: true,
-          },
+            urlId: true,
+            image: true
+          }
         },
-        category: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
+        Category: true,
+        Series: true,
+        Tag: true
       },
     })
 
