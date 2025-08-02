@@ -66,25 +66,25 @@ model VerificationToken {
 }
 
 model Post {
-  id          String    @id @default(cuid())
+  id          String       @id @default(cuid())
   title       String
   content     String
-  published   Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  viewCount   Int       @default(0)
+  published   Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  viewCount   Int          @default(0)
   description String?
   categoryId  String?
   seriesId    String?
   seriesOrder Int?
   userId      String
-  categoryIds String[]  @default([])
+  categoryIds String[]     @default([])
   comments    Comment[]
-  category    Category? @relation(fields: [categoryId], references: [id])
-  series      Series?   @relation(fields: [seriesId], references: [id])
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category    Category?    @relation(fields: [categoryId], references: [id])
+  series      Series?      @relation(fields: [seriesId], references: [id])
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   visitorLogs VisitorLog[]
-  tags        Tag[]     @relation("PostToTag")
+  tags        Tag[]        @relation("PostToTag")
 }
 
 model UserDeleteLog {
@@ -146,15 +146,15 @@ model Category {
 }
 
 model VisitorLog {
-  id          String   @id @default(cuid())
-  userId      String
-  postId      String?
-  referrer    String?
-  userAgent   String?
-  ipAddress   String?
-  country     String?
-  city        String?
-  visitedAt   DateTime @default(now())
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  post        Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String?
+  referrer  String?
+  userAgent String?
+  ipAddress String?
+  country   String?
+  city      String?
+  visitedAt DateTime @default(now())
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

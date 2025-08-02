@@ -18,6 +18,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
+    // 사용자 정보 조회
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        urlId: true,
+        createdAt: true,
+        approvedAt: true
+      }
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
     // 기본 통계 데이터 조회
     const [totalPosts, totalViews, totalComments, totalCategories] = await Promise.all([
       prisma.post.count({
@@ -121,6 +138,11 @@ export async function GET(request: NextRequest) {
     })
 
     const stats = {
+      user: {
+        ...user,
+        createdAt: user.createdAt.toISOString(),
+        approvedAt: user.approvedAt?.toISOString()
+      },
       totalPosts,
       totalViews: totalViews._sum.viewCount || 0,
       totalComments,

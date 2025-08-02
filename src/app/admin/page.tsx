@@ -24,6 +24,7 @@ const I18N: Record<string, { [key: string]: string }> = {
   ko: {
     adminPage: "관리자 페이지",
     home: "홈으로",
+    stats: "통계",
     pendingUsers: "승인 대기 중",
     approvedUsers: "승인된 사용자",
     deletedUsers: "삭제된 사용자",
@@ -71,6 +72,7 @@ const I18N: Record<string, { [key: string]: string }> = {
   en: {
     adminPage: "Admin Page",
     home: "Home",
+    stats: "Statistics",
     pendingUsers: "Pending",
     approvedUsers: "Approved",
     deletedUsers: "Deleted",
@@ -573,12 +575,20 @@ export default function AdminPage() {
       <div className="max-w-4xl mx-auto w-full">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-8 gap-2">
           <h1 className="text-2xl sm:text-3xl font-bold text-pink-500">{I18N[lang].adminPage}</h1>
-          <Link
-            href="/"
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-          >
-            {I18N[lang].home}
-          </Link>
+          <div className="flex gap-2">
+            <Link
+              href="/admin/stats"
+              className="px-4 py-2 text-sm font-medium text-white bg-pink-600 border border-pink-600 rounded-md hover:bg-pink-700"
+            >
+              {I18N[lang].stats}
+            </Link>
+            <Link
+              href="/"
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              {I18N[lang].home}
+            </Link>
+          </div>
         </div>
 
         {/* 탭 네비게이션 */}
