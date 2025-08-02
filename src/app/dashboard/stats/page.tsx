@@ -19,6 +19,7 @@ interface StatsData {
   totalViews: number
   totalComments: number
   totalCategories: number
+  totalVisitors: number
   recentPosts: Array<{
     id: string
     title: string
@@ -213,8 +214,8 @@ export default function StatsPage() {
           <div className="bg-gradient-to-r from-purple-500 to-pink-600 text-white p-6 rounded-lg shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm opacity-90">총 댓글</p>
-                <p className="text-2xl font-bold">{stats?.totalComments || 0}</p>
+                <p className="text-sm opacity-90">총 방문수</p>
+                <p className="text-2xl font-bold">{stats?.totalVisitors || 0}</p>
               </div>
               <Users className="h-8 w-8 opacity-80" />
             </div>

@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 기본 통계 데이터 조회
-    const [totalPosts, totalViews, totalComments, totalCategories] = await Promise.all([
+    const [totalPosts, totalViews, totalComments, totalCategories, totalVisitors] = await Promise.all([
       prisma.post.count({
         where: { userId }
       }),
@@ -50,6 +50,9 @@ export async function GET(request: NextRequest) {
         }
       }),
       prisma.category.count({
+        where: { userId }
+      }),
+      prisma.visitorLog.count({
         where: { userId }
       })
     ])
@@ -147,6 +150,7 @@ export async function GET(request: NextRequest) {
       totalViews: totalViews._sum.viewCount || 0,
       totalComments,
       totalCategories,
+      totalVisitors,
       recentPosts: recentPosts.map(post => ({
         ...post,
         createdAt: post.createdAt.toISOString()

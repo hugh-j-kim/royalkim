@@ -10,10 +10,12 @@ export default function LoginPage() {
   const [email, setEmail] = React.useState("")
   const [password, setPassword] = React.useState("")
   const [error, setError] = React.useState("")
+  const [isPendingUser, setIsPendingUser] = React.useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    setIsPendingUser(false)
 
     try {
       const result = await signIn("credentials", {
@@ -23,7 +25,13 @@ export default function LoginPage() {
       })
 
       if (result?.error) {
-        setError("이메일 또는 비밀번호가 올바르지 않습니다.")
+        // 승인 대기 중인 사용자인지 확인
+        if (result.error.includes("승인 대기 중")) {
+          setError("관리자 승인 대기 중인 계정입니다. 승인 후 로그인해주세요.")
+          setIsPendingUser(true)
+        } else {
+          setError("이메일 또는 비밀번호가 올바르지 않습니다.")
+        }
         return
       }
 
@@ -38,7 +46,11 @@ export default function LoginPage() {
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <h1 className="text-2xl font-bold mb-4 text-center">로그인</h1>
         {error && (
-          <div className="bg-red-100 text-red-700 p-3 rounded-md mb-4">
+          <div className={`p-3 rounded-md mb-4 ${
+            isPendingUser 
+              ? "bg-orange-100 text-orange-700 border border-orange-200" 
+              : "bg-red-100 text-red-700"
+          }`}>
             {error}
           </div>
         )}

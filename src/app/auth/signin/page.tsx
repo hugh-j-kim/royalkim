@@ -10,6 +10,7 @@ export default function SignIn() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const [isPendingUser, setIsPendingUser] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -24,6 +25,7 @@ export default function SignIn() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    setIsPendingUser(false)
 
     try {
       const result = await signIn("credentials", {
@@ -33,7 +35,13 @@ export default function SignIn() {
       })
 
       if (result?.error) {
-        setError("이메일 또는 비밀번호가 올바르지 않습니다.")
+        // 승인 대기 중인 사용자인지 확인
+        if (result.error.includes("승인 대기 중")) {
+          setError("관리자 승인 대기 중인 계정입니다. 승인 후 로그인해주세요.")
+          setIsPendingUser(true)
+        } else {
+          setError("이메일 또는 비밀번호가 올바르지 않습니다.")
+        }
         return
       }
 
@@ -54,7 +62,13 @@ export default function SignIn() {
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="text-red-500 text-sm text-center">{error}</div>
+            <div className={`text-sm text-center p-3 rounded-md ${
+              isPendingUser 
+                ? "text-orange-700 bg-orange-50 border border-orange-200" 
+                : "text-red-500"
+            }`}>
+              {error}
+            </div>
           )}
           {successMessage && (
             <div className="text-green-600 text-sm text-center bg-green-50 p-3 rounded-md">
