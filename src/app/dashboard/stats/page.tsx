@@ -204,7 +204,7 @@ export default function StatsPage() {
         </div>
 
         {/* 월별 조회수 차트 */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6">
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 mb-8">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-pink-500" />
             월별 조회수
