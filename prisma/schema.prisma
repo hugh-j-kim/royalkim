@@ -54,6 +54,7 @@ model User {
   series        Series[]
   sessions      Session[]
   deleteLogs    UserDeleteLog[] @relation("UserDeleteLogs")
+  visitorLogs   VisitorLog[]
 }
 
 model VerificationToken {
@@ -82,6 +83,7 @@ model Post {
   category    Category? @relation(fields: [categoryId], references: [id])
   series      Series?   @relation(fields: [seriesId], references: [id])
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  visitorLogs VisitorLog[]
   tags        Tag[]     @relation("PostToTag")
 }
 
@@ -141,4 +143,18 @@ model Category {
   subcategories Category[] @relation("CategoryToCategory")
   user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   posts         Post[]
+}
+
+model VisitorLog {
+  id          String   @id @default(cuid())
+  userId      String
+  postId      String?
+  referrer    String?
+  userAgent   String?
+  ipAddress   String?
+  country     String?
+  city        String?
+  visitedAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post        Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
 }

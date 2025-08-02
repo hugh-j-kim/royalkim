@@ -56,7 +56,7 @@ export default function Dashboard() {
           </h1>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-12">
           <Link
             href={`/${session?.user?.urlId || ''}`}
             className="bg-gradient-to-r from-pink-500 to-purple-600 text-white p-6 sm:p-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
@@ -79,6 +79,14 @@ export default function Dashboard() {
           >
             <h3 className="text-xl sm:text-2xl font-bold mb-2">사용자 정보 수정</h3>
             <p className="text-sm sm:text-base text-green-100">프로필 정보 변경</p>
+          </Link>
+
+          <Link
+            href="/dashboard/stats"
+            className="bg-gradient-to-r from-orange-500 to-red-600 text-white p-6 sm:p-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+          >
+            <h3 className="text-xl sm:text-2xl font-bold mb-2">통계</h3>
+            <p className="text-sm sm:text-base text-orange-100">블로그 통계 및 분석</p>
           </Link>
         </div>
 

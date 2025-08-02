@@ -2,6 +2,7 @@ import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import prisma from "@/lib/prisma"
 import PostPageClient from "./PostPageClient"
+import VisitorTracker from "@/components/VisitorTracker"
 
 interface Props {
   params: { id: string }
@@ -69,7 +70,8 @@ async function getPost(id: string) {
 
   return {
     ...post,
-    categories
+    categories,
+    user: post.user
   }
 }
 
@@ -103,6 +105,7 @@ export default async function PostPage({ params }: Props) {
   const post = await getPost(params.id)
   return (
     <div style={{ margin: 0, padding: 0 }}>
+      <VisitorTracker userId={(post as any).user.id} postId={post.id} />
       <PostPageClient post={post as any} />
     </div>
   )
