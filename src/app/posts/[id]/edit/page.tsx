@@ -13,13 +13,13 @@ async function getPost(id: string) {
   const post = await prisma.post.findUnique({
     where: { id },
     include: {
-      user: {
+      User: {
         select: {
           email: true,
         },
       },
-      category: true,
-      tags: true,
+      Category: true,
+      Tag: true,
     } as any,
   })
 
@@ -47,7 +47,7 @@ export default async function EditPostPage({ params }: Props) {
 
   const post = await getPost(params.id)
 
-  if (((post as any).user as any).email !== session.user.email) {
+  if (((post as any).User as any).email !== session.user.email) {
     notFound()
   }
 
