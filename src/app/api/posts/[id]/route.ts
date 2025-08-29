@@ -11,12 +11,12 @@ export async function GET(
     const post = await prisma.post.findUnique({
       where: { id: params.id },
       include: {
-        user: { select: { email: true } },
-        category: { select: { id: true, name: true } },
-        tags: true,
-        comments: {
+        User: { select: { email: true } },
+        Category: { select: { id: true, name: true } },
+        Tag: true,
+        Comment: {
           include: {
-            user: {
+            User: {
               select: {
                 name: true,
                 email: true,
@@ -64,13 +64,13 @@ export async function PUT(
     const post = await prisma.post.findUnique({
       where: { id: params.id },
       include: {
-        user: {
+        User: {
           select: {
             email: true,
           },
         },
-        category: true,
-        tags: true,
+        Category: true,
+        Tag: true,
       } as any,
     })
 
@@ -78,7 +78,7 @@ export async function PUT(
       return new NextResponse("Not found", { status: 404 })
     }
 
-    if ((post.user as any).email !== session.user.email) {
+    if ((post.User as any).email !== session.user.email) {
       return new NextResponse("Forbidden", { status: 403 })
     }
 
@@ -95,19 +95,19 @@ export async function PUT(
         published,
       },
       include: {
-        user: {
+        User: {
           select: {
             name: true,
             email: true,
           },
         },
-        category: {
+        Category: {
           select: {
             id: true,
             name: true,
           },
         },
-        tags: true,
+        Tag: true,
       } as any,
     })
 
@@ -131,7 +131,7 @@ export async function DELETE(
     const post = await prisma.post.findUnique({
       where: { id: params.id },
       include: {
-        user: {
+        User: {
           select: {
             email: true,
           },
@@ -143,7 +143,7 @@ export async function DELETE(
       return new NextResponse("Not found", { status: 404 })
     }
 
-    if ((post.user as any).email !== session.user.email) {
+    if ((post.User as any).email !== session.user.email) {
       return new NextResponse("Forbidden", { status: 403 })
     }
 
