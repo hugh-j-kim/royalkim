@@ -12,8 +12,9 @@ async function getPost(id: string) {
   const post = await prisma.post.findUnique({
     where: { id },
     include: {
-      user: {
+      User: {
         select: {
+          id: true,
           name: true,
           email: true,
           urlId: true,
@@ -25,10 +26,10 @@ async function getPost(id: string) {
           name: true,
         },
       },
-      tags: true,
-      comments: {
+      Tag: true,
+      Comment: {
         include: {
-          user: {
+          User: {
             select: {
               name: true,
               email: true,
@@ -71,7 +72,7 @@ async function getPost(id: string) {
   return {
     ...post,
     categories,
-    user: post.user
+    user: (post as any).User
   }
 }
 
